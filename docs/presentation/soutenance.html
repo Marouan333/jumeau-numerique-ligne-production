@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Soutenance — Jumeau numérique d'une ligne de production</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="../rapport/images/logo_ensam.png">
+<style>
+  :root{
+    --bg:#eef1f5; --bg-slide:#ffffff; --ink:#0f172a; --ink-dim:#55627a;
+    --accent:#1B3A5C; --accent2:#B22A2E; --ok:#15803d; --warn:#b45309;
+    --card:#f6f8fb; --card-border:#dfe5ee;
+    --mono:'SF Mono',Consolas,Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  html{font-size:clamp(13px,1.6vw,30px);}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;height:100%;}
+  #deck{height:100vh;overflow:hidden;position:relative;}
+  .slide{
+    position:absolute;inset:0;display:none;flex-direction:column;
+    padding:11vh 7vw 8vh;background:
+      radial-gradient(circle at 92% -10%, rgba(27,58,92,0.07), transparent 40%),
+      radial-gradient(circle at -10% 110%, rgba(178,42,46,0.05), transparent 40%),
+      var(--bg-slide);
+  }
+  .slide.active{display:flex;}
+  .slide::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(var(--accent),var(--accent2));}
+  .topline{position:absolute;top:2.6vh;left:7vw;right:7vw;display:flex;align-items:center;justify-content:space-between;
+    font-size:.78rem;color:var(--ink-dim);border-bottom:1px solid var(--card-border);padding-bottom:.6rem;}
+  .topline img{height:30px;vertical-align:middle;}
+  .topline .l{display:flex;align-items:center;gap:.6rem;}
+  .eyebrow{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);font-weight:700;margin-bottom:.5rem;}
+  h1{font-size:2.8rem;margin:0 0 .3rem 0;line-height:1.12;color:var(--accent);}
+  h2{font-size:1.9rem;margin:0 0 1.1rem 0;line-height:1.2;color:var(--accent);}
+  h3{font-size:1.08rem;margin:0 0 .5rem 0;color:var(--accent);}
+  p{line-height:1.55;color:var(--ink-dim);font-size:1.05rem;margin:.2rem 0 .8rem;}
+  .sub{font-size:1.15rem;color:var(--ink-dim);margin-top:.2rem;}
+  .grid{display:grid;gap:1.1rem;flex:0 0 auto;align-content:start;}
+  .grid.fill{flex:1 1 auto;min-height:0;}
+  .grid.fill > *{min-height:0;}
+  .grid.cols2{grid-template-columns:1fr 1fr;}
+  .grid.cols3{grid-template-columns:repeat(3,1fr);}
+  .grid.cols4{grid-template-columns:repeat(4,1fr);}
+  .grid.wide{grid-template-columns:1.6fr 1fr;}
+  .card{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:1.1rem 1.3rem;}
+  .card ul{margin:.3rem 0 0 0;padding-left:1.1rem;}
+  .card li{margin-bottom:.4rem;color:var(--ink);font-size:.97rem;line-height:1.42;}
+  .card li b{color:var(--accent);}
+  .metric{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;background:var(--card);
+    border:1px solid var(--card-border);border-radius:14px;padding:1rem 1.2rem;}
+  .metric .num{font-size:2.3rem;font-weight:700;color:var(--accent);font-family:var(--mono);}
+  .metric .num.red{color:var(--accent2);} .metric .num.ok{color:var(--ok);}
+  .metric .lbl{font-size:.86rem;color:var(--ink-dim);margin-top:.2rem;}
+  table{width:100%;border-collapse:collapse;font-size:.95rem;}
+  th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--card-border);}
+  th{color:var(--accent);font-weight:700;font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;}
+  td{color:var(--ink-dim);} td b{color:var(--ink);} td.best{color:var(--ok);font-weight:700;}
+  .flow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.95rem;margin:.4rem 0 1rem;}
+  .flow .node{background:var(--accent);color:#fff;border-radius:10px;padding:.65rem .95rem;font-weight:600;text-align:center;line-height:1.2;}
+  .flow .node small{display:block;font-weight:400;opacity:.8;font-size:.78rem;}
+  .flow .node.bn{background:var(--accent2);}
+  .flow .buf{border:1px dashed #9aa6b8;border-radius:8px;padding:.35rem .5rem;font-size:.75rem;color:var(--ink-dim);}
+  .flow .arrow{color:var(--ink-dim);}
+  .callout{border-left:4px solid var(--accent2);background:rgba(178,42,46,.05);padding:.8rem 1.1rem;border-radius:0 10px 10px 0;margin-top:.8rem;}
+  .callout p{color:var(--ink);font-size:.95rem;margin:0;}
+  .callout b{color:var(--accent2);}
+  .callout.ok{border-left-color:var(--ok);background:rgba(21,128,61,.05);} .callout.ok b{color:var(--ok);}
+  .shot{width:100%;height:100%;object-fit:contain;border-radius:12px;border:1px solid var(--card-border);background:#e8ecf1;min-height:0;}
+  .figure{display:flex;flex-direction:column;min-height:0;}
+  .figure .cap{font-size:.8rem;color:var(--ink-dim);margin-top:.4rem;text-align:center;}
+  .footer-idx{position:absolute;bottom:2.4vh;right:7vw;color:var(--ink-dim);font-family:var(--mono);font-size:.8rem;}
+  .footer-tag{position:absolute;bottom:2.4vh;left:7vw;color:var(--ink-dim);font-size:.78rem;}
+  .center{justify-content:center;align-items:center;text-align:center;}
+  .stack{display:flex;flex-direction:column;gap:.4rem;}
+  .team{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;}
+  .member{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:.8rem 1rem;}
+  .member b{display:block;color:var(--ink);} .member span{color:var(--accent2);font-size:.85rem;font-weight:600;}
+  .member code{display:block;font-family:var(--mono);font-size:.75rem;color:var(--ink-dim);margin-top:.3rem;}
+  .bar{display:grid;grid-template-columns:180px 1fr 70px;align-items:center;gap:.8rem;margin:.55rem 0;font-size:.95rem;}
+  .bar .track{height:22px;background:#e6ebf2;border-radius:6px;overflow:hidden;}
+  .bar .fill{height:100%;background:var(--accent);border-radius:6px;}
+  .bar.top .fill{background:var(--ok);}
+  .bar b{font-family:var(--mono);}
+  .title-slide h1{font-size:3.3rem;}
+  .logos{display:flex;align-items:center;justify-content:center;gap:2.4rem;margin-bottom:1.6rem;}
+  .logos img{height:84px;}
+  .logos .inst{font-size:.95rem;color:var(--ink);line-height:1.5;}
+  .filiere{font-size:.8rem;letter-spacing:.3em;color:var(--ink-dim);margin:.6rem 0 1.2rem;}
+  #progress{position:fixed;top:0;left:0;height:3px;background:var(--accent2);z-index:50;transition:width .25s ease;}
+  #nav{position:fixed;bottom:1.4vh;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:50;}
+  #nav .dot{width:7px;height:7px;border-radius:50%;background:#c9d2de;cursor:pointer;transition:.2s;}
+  #nav .dot.active{background:var(--accent);width:20px;border-radius:4px;}
+  .notes{display:none;}
+  #notesBar{position:fixed;bottom:0;left:0;right:0;background:#0f1b2b;color:#dbe3ee;padding:1rem 7vw;font-size:.92rem;
+    line-height:1.5;max-height:28vh;overflow-y:auto;display:none;z-index:60;}
+  #notesBar.show{display:block;} #notesBar b{color:#ffb4b6;}
+  .hint{position:fixed;bottom:1.2vh;left:1.6vw;color:var(--ink-dim);font-family:var(--mono);font-size:.7rem;z-index:50;opacity:.55;}
+  @media print{
+    @page{size:1600px 900px;margin:0;}
+    body{background:#fff;}
+    #progress,#nav,.hint,#notesBar{display:none !important;}
+    #deck{height:auto;overflow:visible;}
+    .slide{position:relative;display:flex !important;page-break-after:always;break-after:page;width:1600px;height:900px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div class="hint">← → / espace pour naviguer · N = notes</div>
+
+<div id="deck">
+
+  <!-- 1 — TITRE -->
+  <section class="slide active title-slide center">
+    <div class="logos">
+      <img src="../rapport/images/logo_ensam.png" alt="ENSAM">
+      <div class="inst"><b>Université Mohammed V de Rabat</b><br>École Nationale Supérieure d'Arts et Métiers</div>
+      <img src="../rapport/images/logo_um5.png" alt="UM5">
+    </div>
+    <div class="filiere">MINI-PROJET · INDUSTRIE 4.0 · FILIÈRE INDIA&amp;SD</div>
+    <h1>Jumeau numérique<br>d'une ligne de production</h1>
+    <p class="sub">Simuler la ligne, la superviser en temps réel et tester virtuellement des scénarios d'optimisation</p>
+    <div style="margin-top:1.8rem;" class="stack">
+      <div style="font-size:1rem;color:var(--ink);">Aymane Issami · Marouan Ezbakhe · Hiba Benzahra · Zaid Hsain · Houssam Kichchou · Mohamed Hamdouch</div>
+      <div style="font-size:.9rem;color:var(--ink-dim);">Encadré par Prof. Maria Zemzami · 3<sup>e</sup> année, S5 · 2026/2027</div>
+    </div>
+    <div class="notes"><b>Accroche :</b> « Peut-on savoir, avant de toucher à une machine, combien de produits on gagnera en accélérant le contrôle qualité ? » C'est exactement la question à laquelle un jumeau numérique répond. Présenter l'équipe en une phrase.</div>
+  </section>
+
+  <!-- 2 — CONTEXTE -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Contexte</div>
+    <h2>Pourquoi un jumeau numérique ?</h2>
+    <div class="grid cols2">
+      <div class="card">
+        <h3>Le problème</h3>
+        <ul>
+          <li>Tester une amélioration sur une <b>ligne réelle</b> coûte cher : arrêt, matière, risque sur la production</li>
+          <li>Les effets d'un changement (goulot, files, blocages) sont <b>difficiles à prévoir</b> à la main</li>
+        </ul>
+        <h3 style="margin-top:1rem;">La réponse Industrie 4.0</h3>
+        <ul>
+          <li>Un <b>double virtuel</b> de la ligne, synchronisé sur ses données</li>
+          <li>On observe, on analyse, on teste « et si… ? » <b>sans risque</b></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Les 3 livrables du cahier des charges</h3>
+        <ul>
+          <li><b>Modèle de simulation</b> du système physique</li>
+          <li><b>Interface synchronisée</b> avec des données simulées</li>
+          <li><b>Scénario d'optimisation</b> testé et documenté</li>
+        </ul>
+        <h3 style="margin-top:1rem;">Ce que nous avons ajouté</h3>
+        <ul>
+          <li>Historique de production (SQLite) et export CSV</li>
+          <li>23 tests automatisés qui valident le modèle</li>
+          <li>Manuel utilisateur, rapport, dépôt Git</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-idx">2 / 13</div>
+    <div class="notes">Rappeler les 3 niveaux (modèle, ombre, jumeau) de Kritzinger : ici le « physique » est lui-même simulé, mais la synchronisation et le retour des commandes sont automatiques.</div>
+  </section>
+
+  <!-- 3 — LA LIGNE -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Le système étudié</div>
+    <h2>Une ligne de 4 postes en série</h2>
+    <div class="flow">
+      <div class="node">Alimentation<small>5 s</small></div><span class="arrow">→</span><span class="buf">file ≤ 8</span><span class="arrow">→</span>
+      <div class="node">Traitement<small>8 s</small></div><span class="arrow">→</span><span class="buf">file ≤ 8</span><span class="arrow">→</span>
+      <div class="node bn">Contrôle qualité<small>15 s · 5 % rejets</small></div><span class="arrow">→</span><span class="buf">file ≤ 8</span><span class="arrow">→</span>
+      <div class="node">Emballage<small>7 s</small></div>
+    </div>
+    <div class="grid cols4">
+      <div class="metric"><span class="num red">15 s</span><span class="lbl">poste le plus lent : contrôle qualité</span></div>
+      <div class="metric"><span class="num">4 /min</span><span class="lbl">cadence max de la ligne (60 / 15)</span></div>
+      <div class="metric"><span class="num">2 s</span><span class="lbl">transfert sur le convoyeur</span></div>
+      <div class="metric"><span class="num">MTBF</span><span class="lbl">pannes aléatoires : 400 à 600 s, réparation 20 à 30 s</span></div>
+    </div>
+    <div class="callout"><p><b>Le goulot :</b> le contrôle qualité borne toute la ligne. Quand sa file est pleine, le traitement se bloque, puis l'alimentation : le problème remonte la ligne.</p></div>
+    <div class="footer-idx">3 / 13</div>
+    <div class="notes">Insister sur le mécanisme de blocage (file pleine → le poste garde son produit) : c'est lui qui rend la simulation réaliste et qu'on verra en 3D.</div>
+  </section>
+
+  <!-- 4 — ARCHITECTURE -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Conception</div>
+    <h2>Architecture : un seul flux de données pour la 3D et le tableau de bord</h2>
+    <div class="grid cols3">
+      <div class="card"><h3>① Simulation — <code>sim.py</code></h3><ul><li>Pas de <b>0,05 s</b> simulée</li><li>4 états : marche, attente, bloquée, panne</li><li>Files, rejets, pannes (MTBF/MTTR)</li><li>Calcul des KPI</li></ul></div>
+      <div class="card"><h3>② Backend — <code>server.py</code></h3><ul><li>FastAPI : <b>WebSocket</b> <code>/ws</code></li><li>État JSON diffusé <b>10×/s</b></li><li>Commandes validées et bornées</li><li>Historique SQLite + API REST</li></ul></div>
+      <div class="card"><h3>③ Interface — navigateur</h3><ul><li><b>Three.js</b> : ligne en 3D animée</li><li>Tableau de bord : KPI, postes, courbes</li><li>Même message → <b>toujours synchronisés</b></li><li>Aucune installation côté opérateur</li></ul></div>
+    </div>
+    <div class="callout ok"><p><b>Pourquoi Three.js plutôt que Unity :</b> la 3D et le tableau de bord vivent dans la même page et lisent le même message. La synchronisation exigée par le livrable est garantie par construction, et la démo tourne dans un simple navigateur.</p></div>
+    <div class="footer-idx">4 / 13</div>
+    <div class="notes">Le backend n'envoie jamais une info à la 3D et une autre au dashboard : impossible d'afficher une machine en panne d'un côté et en marche de l'autre.</div>
+  </section>
+
+  <!-- 5 — LA 3D -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Interface</div>
+    <h2>La ligne en 3D, synchronisée en temps réel</h2>
+    <div class="figure" style="flex:1;"><img class="shot" src="../rapport/images/screenshots/vue_globale.png" alt="Vue globale"><div class="cap">Ligne initiale après 9 min simulées : file de 8 devant le contrôle, traitement et alimentation bloqués, goulot identifié</div></div>
+    <div class="footer-idx">5 / 13</div>
+    <div class="notes">Montrer les couleurs : voyants (vert/gris/orange/rouge), produits (brun brut, bleu traité, vert contrôlé, carton emballé), bac à rebuts, palette.</div>
+  </section>
+
+  <!-- 6 — ÉTATS -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Interface</div>
+    <h2>Pannes et scénarios visibles immédiatement</h2>
+    <div class="grid cols2 fill">
+      <div class="figure"><img class="shot" src="../rapport/images/screenshots/panne_traitement.png" alt="Panne"><div class="cap">Panne provoquée sur le traitement : voyant rouge, file amont pleine</div></div>
+      <div class="figure"><img class="shot" src="../rapport/images/screenshots/double_controle.png" alt="Deux contrôles"><div class="cap">Scénario « 2 postes de contrôle » : machines en parallèle, file vide</div></div>
+    </div>
+    <div class="footer-idx">6 / 13</div>
+    <div class="notes">Une panne peut être provoquée depuis le tableau de bord : utile pour la formation des opérateurs, sans aucun risque.</div>
+  </section>
+
+  <!-- 7 — DASHBOARD -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Supervision</div>
+    <h2>Tableau de bord, historique et KPI</h2>
+    <div class="grid wide fill">
+      <div class="grid cols2 fill" style="gap:.8rem;">
+        <div class="figure"><img class="shot" src="../rapport/images/screenshots/dashboard_kpi.png" alt="Supervision"><div class="cap">Supervision</div></div>
+        <div class="figure"><img class="shot" src="../rapport/images/screenshots/historique.png" alt="Historique"><div class="cap">Historique (SQLite)</div></div>
+      </div>
+      <div class="card">
+        <h3>Indicateurs</h3>
+        <ul>
+          <li>Cadence <b>réelle</b> (1 min glissante) et <b>théorique</b></li>
+          <li>Produits finis, rejets, <b>en-cours</b>, temps de séjour</li>
+          <li>Par poste : utilisation, disponibilité, attente, <b>MTBF/MTTR observés</b></li>
+          <li><b>Goulot observé</b> : poste le plus occupé <i>sans être bloqué</i></li>
+        </ul>
+        <h3 style="margin-top:.9rem;">Historique</h3>
+        <ul><li>1 relevé par minute simulée, par exécution</li><li>Courbes, événements, <b>export CSV</b></li></ul>
+      </div>
+    </div>
+    <div class="footer-idx">7 / 13</div>
+    <div class="notes">Le goulot « utilisation − temps bloqué » : un poste amont bloqué paraît occupé (il garde son produit) mais ne limite pas la ligne.</div>
+  </section>
+
+  <!-- 8 — SOLUTIONS -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Scénario d'optimisation</div>
+    <h2>Objectif : lever le goulot du contrôle qualité</h2>
+    <div class="grid cols3">
+      <div class="card"><h3>① Contrôle automatisé</h3><ul><li>15 s → <b>8 s</b> par inspection automatique</li><li>Théorique : <b>7,5 /min</b></li><li>Le traitement (8 s) devient limitant</li></ul></div>
+      <div class="card"><h3>② 2ᵉ poste de contrôle</h3><ul><li>2 machines de 15 s en <b>parallèle</b></li><li>Temps effectif 7,5 s → <b>7,5 /min</b></li><li>Limité aussi par le traitement</li></ul></div>
+      <div class="card"><h3>③ Convoyeur adaptatif</h3><ul><li>Ralentit devant une file chargée</li><li>Files limitées à <b>3</b> au lieu de 8</li><li>Vise l'<b>accumulation</b>, pas la cadence</li></ul></div>
+    </div>
+    <div class="callout"><p><b>Protocole :</b> chaque scénario est simulé <b>1 h</b>, avec la <b>même graine aléatoire</b> et les mêmes paramètres (pannes, transferts, rejets). Regarder l'animation ne suffit pas : une panne au mauvais moment inverserait la conclusion.</p></div>
+    <div class="footer-idx">8 / 13</div>
+    <div class="notes">Le bouton « Lancer la comparaison » du dashboard exécute exactement ce protocole ; les chiffres de la slide suivante en sont la sortie brute.</div>
+  </section>
+
+  <!-- 9 — RÉSULTATS -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Résultats · 1 h simulée, pannes activées</div>
+    <h2>+79 % de production, goulot déplacé au traitement</h2>
+    <div class="grid wide">
+      <div class="card" style="padding:.6rem 1rem;">
+        <table>
+          <tr><th>Indicateur</th><th>Initiale</th><th>Contrôle 8 s</th><th>2 contrôles</th><th>Adaptatif</th></tr>
+          <tr><td><b>Produits / h</b></td><td>218</td><td class="best">390 (+79 %)</td><td>389 (+78 %)</td><td>218</td></tr>
+          <tr><td><b>Attente au contrôle</b></td><td>115 s</td><td class="best">9 s</td><td>16 s</td><td>41 s</td></tr>
+          <tr><td><b>En-cours moyen</b></td><td>19,0</td><td>13,4</td><td>14,9</td><td class="best">9,4 (−51 %)</td></tr>
+          <tr><td><b>Séjour moyen</b></td><td>286 s</td><td class="best">113 s</td><td>129 s</td><td>145 s</td></tr>
+          <tr><td><b>Goulot</b></td><td>Contrôle</td><td>Traitement</td><td>Traitement</td><td>Contrôle</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Produits finis / h</h3>
+        <div class="bar"><span>Initiale</span><div class="track"><div class="fill" style="width:51.7%"></div></div><b>218</b></div>
+        <div class="bar top"><span>Contrôle 8 s</span><div class="track"><div class="fill" style="width:92.4%"></div></div><b>390</b></div>
+        <div class="bar top"><span>2 contrôles</span><div class="track"><div class="fill" style="width:92.2%"></div></div><b>389</b></div>
+        <div class="bar"><span>Adaptatif</span><div class="track"><div class="fill" style="width:51.7%"></div></div><b>218</b></div>
+        <p style="font-size:.85rem;margin-top:.8rem;">Sans pannes : 226 → 422 produits/h.</p>
+      </div>
+    </div>
+    <div class="footer-idx">9 / 13</div>
+    <div class="notes">Le contrôle automatisé gagne sur l'attente et le séjour (8 s au lieu de 15 par produit). Le convoyeur adaptatif ne produit pas plus mais divise l'en-cours par deux : utile en complément.</div>
+  </section>
+
+  <!-- 10 — ANALYSE -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Analyse</div>
+    <h2>Le jumeau a corrigé l'estimation de départ</h2>
+    <div class="grid cols3">
+      <div class="metric"><span class="num">450</span><span class="lbl">produits/h estimés (calcul théorique)</span></div>
+      <div class="metric"><span class="num red">390</span><span class="lbl">produits/h simulés (avec pannes, rejets, transferts)</span></div>
+      <div class="metric"><span class="num">−13 %</span><span class="lbl">écart révélé avant tout investissement</span></div>
+    </div>
+    <div class="grid cols2" style="margin-top:1rem;">
+      <div class="card"><h3>D'où vient l'écart</h3><ul><li><b>Rejets</b> : 5 % des produits contrôlés sortent de la ligne</li><li><b>Démarrage</b> : 1er produit fini après 41 s</li><li><b>Pannes</b> : −4 % avant, −8 % après optimisation (une ligne rapide perd plus par minute d'arrêt)</li></ul></div>
+      <div class="card"><h3>Théorie des contraintes</h3><ul><li>Optimiser un poste qui n'est pas le goulot <b>ne sert à rien</b></li><li>Optimiser le goulot en <b>fait apparaître un autre</b> : ici le traitement, utilisé à 94 %</li><li>Prochaine amélioration : <b>le traitement</b></li></ul></div>
+    </div>
+    <div class="footer-idx">10 / 13</div>
+    <div class="notes">Sans pannes : 422 finis + 24 rejets = 446 sorties ≈ 450 → la théorie est cohérente, ce sont les rejets et les pannes qui font la différence.</div>
+  </section>
+
+  <!-- 11 — VALIDATION -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Validation</div>
+    <h2>Un modèle vérifié, pas seulement une animation</h2>
+    <div class="grid cols2">
+      <div class="card">
+        <h3>23 tests automatisés (pytest) — 23/23</h3>
+        <ul>
+          <li>Débit de régime = débit théorique <b>à 5 % près</b> (4,0 / 7,5 / 7,5)</li>
+          <li><b>Conservation</b> : créés = finis + rejetés + en-cours</li>
+          <li>Aucune file ne dépasse sa <b>capacité</b></li>
+          <li>Les pannes réduisent disponibilité et production</li>
+          <li>Rejets ≈ 5 %, goulot déplacé, comparaison <b>reproductible</b></li>
+          <li>API WebSocket, REST, historique et export CSV</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Loi de Little : L = λ · W</h3>
+        <p style="color:var(--ink);font-size:1rem;">Ligne initiale : λ = 230 produits/h, W = 286 s</p>
+        <div class="grid cols2">
+          <div class="metric"><span class="num">18,3</span><span class="lbl">en-cours prédit</span></div>
+          <div class="metric"><span class="num ok">19,0</span><span class="lbl">en-cours mesuré (écart 4 %)</span></div>
+        </div>
+        <p style="font-size:.88rem;margin-top:.8rem;">L'écart vient des produits encore en ligne en fin de simulation.</p>
+      </div>
+    </div>
+    <div class="footer-idx">11 / 13</div>
+    <div class="notes">Mohamed : les tests ne vérifient pas que « ça tourne », mais que la simulation respecte des propriétés connues d'une ligne de production.</div>
+  </section>
+
+  <!-- 12 — ÉQUIPE -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Organisation</div>
+    <h2>Une équipe de six, un fichier par responsabilité</h2>
+    <div class="team">
+      <div class="member"><b>Aymane Issami</b><span>3D &amp; Architecture</span><code>frontend/js/scene.js</code></div>
+      <div class="member"><b>Marouan Ezbakhe</b><span>3D &amp; Animation</span><code>frontend/js/scene.js</code></div>
+      <div class="member"><b>Hiba Benzahra</b><span>Simulation industrielle</span><code>backend/sim.py</code></div>
+      <div class="member"><b>Zaid Hsain</b><span>Backend &amp; Communication</span><code>backend/server.py · storage.py</code></div>
+      <div class="member"><b>Houssam Kichchou</b><span>Dashboard &amp; KPI</span><code>frontend/js/app.js</code></div>
+      <div class="member"><b>Mohamed Hamdouch</b><span>Optimisation &amp; Validation</span><code>compare_presets · tests/</code></div>
+    </div>
+    <div class="grid cols3" style="margin-top:1rem;">
+      <div class="card"><h3>Formation</h3><ul><li>Opérateurs 1 h, chefs d'équipe 2 h</li><li>Le jumeau sert de simulateur</li></ul></div>
+      <div class="card"><h3>Processus</h3><ul><li>Tout changement simulé d'abord</li><li>Revue sur l'historique</li></ul></div>
+      <div class="card"><h3>Changement</h3><ul><li>Mesurer la ligne, pas les personnes</li><li>Déploiement progressif</li></ul></div>
+    </div>
+    <div class="footer-idx">12 / 13</div>
+    <div class="notes">Le protocole WebSocket est le contrat entre les équipes : états des machines et format des messages fixés dès le départ.</div>
+  </section>
+
+  <!-- 13 — CONCLUSION -->
+  <section class="slide">
+    <div class="topline"><span class="l"><img src="../rapport/images/logo_ensam.png" alt="">Jumeau numérique · Industrie 4.0</span><span>ENSAM Rabat</span></div>
+    <div class="eyebrow">Bilan</div>
+    <h2>Limites assumées et perspectives</h2>
+    <div class="grid cols2">
+      <div class="card"><h3>Ce que nous ne cachons pas</h3><ul>
+        <li>Données <b>entièrement simulées</b> : les paramètres sont des hypothèses pédagogiques</li>
+        <li>Pas de connexion à des <b>automates ou capteurs</b> réels</li>
+        <li>Une panne arrête tout le poste : la redondance d'un poste doublé n'est <b>pas modélisée</b></li>
+        <li>Une seule graine : pas encore d'<b>intervalles de confiance</b></li>
+      </ul></div>
+      <div class="card"><h3>Perspectives</h3><ul>
+        <li>Remplacer <code>sim.py</code> par un adaptateur <b>OPC UA / MQTT</b>, même format de message</li>
+        <li><b>Recalage</b> automatique du modèle sur l'historique réel</li>
+        <li><b>Maintenance prédictive</b> du goulot, indicateur <b>TRS</b></li>
+        <li>Optimisation automatique sur plusieurs graines</li>
+      </ul></div>
+    </div>
+    <div class="callout ok"><p><b>Démonstration en direct :</b> <code>python backend/server.py</code> → <code>http://localhost:8000</code> · situation initiale → panne → contrôle à 8 s → comparaison → historique.</p></div>
+    <div class="footer-idx">13 / 13</div>
+    <div class="notes">Enchaîner sur la démo (5 min) : suivre le scénario du manuel utilisateur, section 5. Merci, questions.</div>
+  </section>
+
+</div>
+
+<div id="nav"></div>
+<div id="notesBar"></div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  let idx = 0;
+  const progress = document.getElementById('progress');
+  const navEl = document.getElementById('nav');
+  const notesBar = document.getElementById('notesBar');
+  let notesVisible = false;
+
+  slides.forEach((s, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => go(i));
+    navEl.appendChild(dot);
+  });
+
+  function renderNotes() {
+    const noteDiv = slides[idx].querySelector('.notes');
+    notesBar.innerHTML = noteDiv ? noteDiv.innerHTML : '<i>(pas de notes pour cette slide)</i>';
+  }
+
+  function go(i) {
+    if (i < 0 || i >= slides.length) return;
+    slides[idx].classList.remove('active');
+    idx = i;
+    slides[idx].classList.add('active');
+    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+    Array.from(navEl.children).forEach((d, j) => d.classList.toggle('active', j === idx));
+    renderNotes();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(idx + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(idx - 1); }
+    if (e.key.toLowerCase() === 'n') { notesVisible = !notesVisible; notesBar.classList.toggle('show', notesVisible); }
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End') go(slides.length - 1);
+  });
+
+  go(0);
+</script>
+
+</body>
+</html>

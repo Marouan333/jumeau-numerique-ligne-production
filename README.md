@@ -1,9 +1,41 @@
+<p align="center">
+  <img src="frontend/assets/logo_ensam.png" height="80" alt="ENSAM Rabat">
+  &nbsp;&nbsp;&nbsp;
+  <img src="frontend/assets/logo_um5.png" height="70" alt="Université Mohammed V de Rabat">
+</p>
+
 # Jumeau numérique d'une ligne de production
 
-Projet Industrie 4.0 – ENSAM. Ligne simplifiée à 4 postes : **Alimentation (5 s) → Traitement (8 s) → Contrôle qualité (15 s) → Emballage (7 s)**.
+Mini-projet Industrie 4.0 – ENSAM Rabat, filière INDIA&SD, 2026/2027 – encadré par **Prof. Maria Zemzami**.
+
+![Vue du jumeau numérique](docs/rapport/images/screenshots/vue_globale.png)
+
+Ligne simplifiée à 4 postes : **Alimentation (5 s) → Traitement (8 s) → Contrôle qualité (15 s) → Emballage (7 s)**.
 
 - **Backend Python** (`backend/`) : simulation de la ligne (files d'attente, blocages, pannes, rejets) + diffusion temps réel par WebSocket.
 - **Frontend Three.js** (`frontend/`) : ligne en 3D animée + dashboard KPI + pilotage des scénarios d'optimisation.
+- **Historique SQLite** (`backend/storage.py`) : un relevé des KPI par minute simulée, événements, export CSV.
+- **Validation** (`tests/`) : 23 tests pytest (débit théorique, conservation, capacité des files, pannes, API).
+
+## Documents
+
+| Document | Fichier |
+|---|---|
+| Rapport final (LaTeX, 38 p.) | [`docs/rapport/rapport.pdf`](docs/rapport/rapport.pdf) |
+| Présentation de soutenance | [`docs/presentation/soutenance.html`](docs/presentation/soutenance.html) ([PDF](docs/presentation/soutenance.pdf)) |
+| Répartition des tâches | [`docs/repartition/repartition-taches.pdf`](docs/repartition/repartition-taches.pdf) |
+| Manuel utilisateur | [`docs/manuel-utilisateur.md`](docs/manuel-utilisateur.md) |
+
+## Équipe
+
+| Membre | Responsabilité | Code |
+|---|---|---|
+| Aymane ISSAMI | 3D & Architecture | `frontend/js/scene.js` |
+| Marouan EZBAKHE | 3D & Animation | `frontend/js/scene.js` |
+| Hiba BENZAHRA | Simulation industrielle | `backend/sim.py` |
+| Zaid HSAIN | Backend & Communication | `backend/server.py`, `backend/storage.py` |
+| Houssam KICHCHOU | Dashboard & KPI | `frontend/js/app.js` |
+| Mohamed HAMDOUCH | Optimisation & Validation | `compare_presets`, `tests/` |
 
 ## Lancer
 
@@ -17,6 +49,8 @@ python backend/server.py
 ```
 
 Puis ouvrir <http://localhost:8000>. Three.js est chargé depuis un CDN (connexion Internet nécessaire).
+
+Tests : `python -m pytest -q`. Rapport : `cd docs/rapport && tectonic rapport.tex` (ou `make`).
 
 ## Architecture
 
