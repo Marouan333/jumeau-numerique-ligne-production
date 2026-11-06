@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jumeau numérique – Ligne de production</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <main id="viewport">
+    <header class="topbar">
+      <div class="brand">
+        <strong>Jumeau numérique</strong>
+        <span>Ligne de production · Industrie 4.0</span>
+      </div>
+      <div class="sim-controls">
+        <span id="conn" class="conn off">Déconnecté</span>
+        <span class="clock" id="clock">t = 0 s</span>
+        <button id="pause" class="btn">⏸ Pause</button>
+        <div class="seg" id="speed">
+          <button data-v="1">×1</button><button data-v="4">×4</button><button data-v="10">×10</button><button data-v="20">×20</button>
+        </div>
+        <button id="reset" class="btn">↺ Réinitialiser</button>
+        <button id="view" class="btn">Vue globale</button>
+      </div>
+    </header>
+    <div class="legend">
+      <div><i style="background:#22c55e"></i>En marche</div>
+      <div><i style="background:#94a3b8"></i>En attente</div>
+      <div><i style="background:#f59e0b"></i>Bloqué</div>
+      <div><i style="background:#ef4444"></i>En panne</div>
+      <hr>
+      <div><i style="background:#b7793f"></i>Produit brut</div>
+      <div><i style="background:#4f7fe0"></i>Traité</div>
+      <div><i style="background:#2fb67c"></i>Contrôlé</div>
+      <div><i style="background:#c9a26b"></i>Emballé</div>
+      <p>Cliquez sur une machine pour la sélectionner.</p>
+    </div>
+  </main>
+
+  <aside id="panel">
+    <section>
+      <h2>Indicateurs (KPI)</h2>
+      <div class="kpis">
+        <div class="kpi"><span>Cadence réelle</span><b id="k-thr">–</b><small>produits/min (1 min glissante)</small></div>
+        <div class="kpi"><span>Cadence théorique</span><b id="k-theo">–</b><small id="k-theo-h">–</small></div>
+        <div class="kpi"><span>Produits finis</span><b id="k-prod">–</b><small id="k-avg">–</small></div>
+        <div class="kpi"><span>Rejets</span><b id="k-rej">–</b><small id="k-rej-pct">–</small></div>
+        <div class="kpi"><span>En-cours (WIP)</span><b id="k-wip">–</b><small id="k-lead">–</small></div>
+        <div class="kpi warn"><span>Goulot d'étranglement</span><b id="k-bn" class="txt">–</b><small id="k-bn-t">–</small></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>État des postes</h2>
+      <table class="stations">
+        <thead><tr><th>Poste</th><th>État</th><th>File</th><th>Util.</th><th>Dispo.</th><th>Attente</th></tr></thead>
+        <tbody id="st-body"></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Débit de production</h2>
+      <canvas id="chart" height="150"></canvas>
+      <div class="chart-legend"><span class="l-real">Débit réel</span><span class="l-theo">Théorique</span></div>
+    </section>
+
+    <section>
+      <h2>Scénario d'optimisation</h2>
+      <div class="presets" id="presets"></div>
+      <div class="field">
+        <label for="t-ctrl">Temps de contrôle qualité <b id="t-ctrl-v">15 s</b></label>
+        <input type="range" id="t-ctrl" min="4" max="20" step="1" value="15">
+      </div>
+      <div class="field">
+        <label for="t-trait">Temps de traitement <b id="t-trait-v">8 s</b></label>
+        <input type="range" id="t-trait" min="4" max="20" step="1" value="8">
+      </div>
+      <div class="field row">
+        <label>Postes de contrôle en parallèle</label>
+        <div class="seg" id="srv-ctrl"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="adaptive"><span>Convoyeur adaptatif (limite les files à 3)</span></label>
+      <label class="toggle"><input type="checkbox" id="failures" checked><span>Pannes aléatoires</span></label>
+    </section>
+
+    <section>
+      <h2>Machine sélectionnée</h2>
+      <div class="field row">
+        <select id="sel-station"></select>
+        <button id="break" class="btn danger">Provoquer une panne</button>
+        <button id="repair" class="btn">Réparer</button>
+      </div>
+      <p class="muted" id="sel-info">–</p>
+    </section>
+
+    <section>
+      <h2>Comparaison avant / après</h2>
+      <p class="muted">Simule chaque scénario pendant 1 h (même graine aléatoire) côté backend.</p>
+      <div class="field row">
+        <button id="compare" class="btn primary">Lancer la comparaison</button>
+        <button id="csv" class="btn" disabled>Exporter CSV</button>
+      </div>
+      <div id="cmp-out"></div>
+    </section>
+
+    <section>
+      <h2>Journal</h2>
+      <ul id="events" class="events"></ul>
+    </section>
+  </aside>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
