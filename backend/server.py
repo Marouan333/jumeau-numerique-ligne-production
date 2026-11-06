@@ -1,4 +1,4 @@
-"""Backend du jumeau numérique : simulation + diffusion WebSocket.
+"""Backend du jumeau numérique : simulation + diffusion WebSocket + historique SQLite.
 
 Lancer :  python backend/server.py   (puis ouvrir http://localhost:8000)
 """
@@ -10,36 +10,58 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
 from sim import N, PRESETS, STATIONS, Sim, compare_presets
+from storage import Storage
 
-FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
-TICK = 0.1      # période d'envoi au navigateur (s réelles)
-SUBSTEP = 0.05  # pas de simulation (s simulées)
+ROOT = Path(__file__).resolve().parent.parent
+FRONTEND = ROOT / "frontend"
+DB_PATH = os.environ.get("DB_PATH", str(ROOT / "data" / "jumeau.db"))
+TICK = 0.1           # période d'envoi au navigateur (s réelles)
+SUBSTEP = 0.05       # pas de simulation (s simulées)
+SAMPLE_EVERY = 60.0  # relevé des KPI dans l'historique (s simulées)
 
 
 class Hub:
-    def __init__(self):
+    def __init__(self, storage: Storage):
+        self.storage = storage
         self.sim = Sim()
         self.sim.track_exits = True
+        self.sim.on_event = self._log_event
         self.speed = 4.0
         self.paused = False
         self.preset = "initial"
         self.clients: set[WebSocket] = set()
+        self.new_run(PRESETS["initial"]["label"])
+
+    def _log_event(self, t: float, kind: str, text: str):
+        self.storage.add_event(self.run_id, t, kind, text)
+
+    def new_run(self, label: str):
+        cfg = {k: self.sim.cfg[k] for k in ("times", "servers", "adaptive", "failures")}
+        self.run_id = self.storage.start_run(label, cfg)
+        self.next_sample = SAMPLE_EVERY
+
+    def step(self):
+        for _ in range(max(1, round(self.speed * TICK / SUBSTEP))):
+            self.sim.step(SUBSTEP)
+            if self.sim.t >= self.next_sample:
+                self.storage.add_sample(self.run_id, self.sim.kpis(), self.sim.stations())
+                self.next_sample += SAMPLE_EVERY
 
 
-hub = Hub()
+hub: Hub | None = None
 
 
 async def sim_loop():
     while True:
         if not hub.paused:
-            for _ in range(max(1, round(hub.speed * TICK / SUBSTEP))):
-                hub.sim.step(SUBSTEP)
+            hub.step()
         msg = json.dumps({"type": "state", "speed": hub.speed, "paused": hub.paused,
-                          "preset": hub.preset, **hub.sim.snapshot()})
+                          "preset": hub.preset, "run_id": hub.run_id, **hub.sim.snapshot()})
         for ws in list(hub.clients):
             try:
                 await ws.send_text(msg)
@@ -50,6 +72,8 @@ async def sim_loop():
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    global hub
+    hub = Hub(Storage(DB_PATH))
     task = asyncio.create_task(sim_loop())
     yield
     task.cancel()
@@ -72,25 +96,30 @@ async def handle(ws: WebSocket, m: dict):
         if name in PRESETS:
             sim.apply_preset(PRESETS[name])
             hub.preset = name
+            hub.new_run(PRESETS[name]["label"])
             sim._event(f"Scénario : {PRESETS[name]['label']}")
     elif cmd == "set_time":
         i = _station(m)
         sim.set_time(i, max(1.0, min(60.0, float(m["value"]))))
         hub.preset = "custom"
+        sim._event(f"Réglage : {STATIONS[i]['name']} = {sim.cfg['times'][i]:g} s")
     elif cmd == "set_servers":
         sim.set_servers(_station(m), int(m["value"]))
         hub.preset = "custom"
     elif cmd == "failures":
         sim.set_failures(bool(m["value"]))
+        sim._event("Pannes aléatoires " + ("activées" if m["value"] else "désactivées"))
     elif cmd == "adaptive":
         sim.cfg["adaptive"] = bool(m["value"])
         hub.preset = "custom"
+        sim._event("Convoyeur adaptatif " + ("activé" if m["value"] else "désactivé"))
     elif cmd == "speed":
         hub.speed = max(0.25, min(20.0, float(m["value"])))
     elif cmd == "pause":
         hub.paused = bool(m["value"])
     elif cmd == "reset":
         sim.reset()
+        hub.new_run("Remise à zéro" if hub.preset == "custom" else PRESETS[hub.preset]["label"])
     elif cmd == "break":
         sim.force_break(_station(m))
     elif cmd == "repair":
@@ -122,9 +151,32 @@ async def ws_endpoint(ws: WebSocket):
         hub.clients.discard(ws)
 
 
+# ------------------------------------------------------------------ REST
 @app.get("/api/state")
 def api_state():
-    return {"speed": hub.speed, "paused": hub.paused, "preset": hub.preset, **hub.sim.snapshot()}
+    snap = hub.sim.snapshot()
+    snap.pop("exits")
+    return {"speed": hub.speed, "paused": hub.paused, "preset": hub.preset, "run_id": hub.run_id, **snap}
+
+
+@app.get("/api/runs")
+def api_runs():
+    return hub.storage.runs()
+
+
+@app.get("/api/history")
+def api_history(run: int):
+    data = hub.storage.history(run)
+    if not data["samples"] and not data["events"] and run != hub.run_id:
+        raise HTTPException(404, "exécution inconnue")
+    return data
+
+
+@app.get("/api/export.csv")
+def api_export(run: int | None = None):
+    name = f"historique_run{run}.csv" if run else "historique_complet.csv"
+    return Response("﻿" + hub.storage.export_csv(run), media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
 app.mount("/", StaticFiles(directory=FRONTEND, html=True), name="frontend")

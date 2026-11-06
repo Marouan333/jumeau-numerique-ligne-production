@@ -16,7 +16,7 @@ const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness
 const MATS = {
   frame: mat(0x3a4250, { metalness: 0.6, roughness: 0.4 }),
   body: mat(0xdfe4ea, { metalness: 0.3, roughness: 0.5 }),
-  accent: mat(0x2f6690, { metalness: 0.4 }),
+  accent: mat(0x1b3a5c, { metalness: 0.4 }),  // bleu marine ENSAM
   dark: mat(0x1f2933, { roughness: 0.8 }),
   glass: new THREE.MeshStandardMaterial({ color: 0x9fd3ff, transparent: true, opacity: 0.25, roughness: 0.1 }),
   yellow: mat(0xf2c230),

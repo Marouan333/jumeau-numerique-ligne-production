@@ -67,6 +67,7 @@ class Sim:
         if config:
             self.cfg.update(deepcopy(config))
         self.seed = seed
+        self.on_event = None  # rappel (t, kind, text) pour l'historique
         self.track_exits = False
         self.reset()
 
@@ -92,6 +93,7 @@ class Sim:
         self.produced = 0
         self.rejected = 0
         self.failures_count = 0
+        self.fail_n = [0] * N
         self.exit_times: deque[float] = deque()
         self.history: deque = deque(maxlen=180)
         self._next_hist = 1.0
@@ -146,10 +148,13 @@ class Sim:
         self.down[i] = True
         self.down_rem[i] = self.cfg["mttr"][i] * self.rng.uniform(0.6, 1.4)
         self.failures_count += 1
+        self.fail_n[i] += 1
         self._event(f"Panne : {STATIONS[i]['name']} ({self.down_rem[i]:.0f} s)", "panne")
 
     def _event(self, text: str, kind: str = "info"):
         self.events.appendleft({"t": round(self.t, 1), "text": text, "kind": kind})
+        if self.on_event:
+            self.on_event(round(self.t, 1), kind, text)
 
     def _load(self, dest: int) -> int:
         return len(self.queues[dest]) + sum(1 for tr in self.transit if tr[1] == dest)
@@ -305,6 +310,10 @@ class Sim:
                 "wait": round(self.wait_sum[i] / self.wait_n[i], 1) if self.wait_n[i] else 0.0,
                 "downtime": round(self.downtime[i], 1),
                 "repair_in": round(self.down_rem[i], 1) if self.down[i] else 0,
+                "failures": self.fail_n[i],
+                # MTBF / MTTR observés (temps de bon fonctionnement / nombre de pannes)
+                "mtbf_obs": round((self.t - self.downtime[i]) / self.fail_n[i], 0) if self.fail_n[i] else None,
+                "mttr_obs": round(self.downtime[i] / self.fail_n[i], 1) if self.fail_n[i] else None,
                 "servers": [{
                     "busy": s.p is not None,
                     "done": s.done,

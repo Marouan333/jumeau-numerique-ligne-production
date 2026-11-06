@@ -79,7 +79,16 @@ function onState(m) {
   const s = m.stations[selected];
   $('sel-info').textContent = s.state === 'panne'
     ? `En panne – réparation dans ${fmt(s.repair_in, 0)} s simulées.`
-    : `${STATE_TXT[s.state]} · temps de cycle ${s.time} s · arrêts cumulés ${fmt(s.downtime, 0)} s · bloqué ${pct(s.blocked)} du temps`;
+    : `${STATE_TXT[s.state]} · temps de cycle ${s.time} s`;
+  $('sel-stats').innerHTML = [
+    ['Taux d\'utilisation', pct(s.util)],
+    ['Disponibilité', pct(s.avail)],
+    ['Temps bloqué', pct(s.blocked)],
+    ['Nombre de pannes', s.failures],
+    ['MTBF observé', s.mtbf_obs ? `${fmt(s.mtbf_obs, 0)} s` : '–'],
+    ['MTTR observé', s.mttr_obs ? `${fmt(s.mttr_obs, 1)} s` : '–'],
+    ['Arrêts cumulés', `${fmt(s.downtime, 0)} s`],
+  ].map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('');
 
   $('events').innerHTML = m.events.map((e) =>
     `<li class="${e.kind}"><time>${formatTime(e.t)}</time>${e.text}</li>`).join('');
@@ -112,7 +121,7 @@ function drawChart(history, theo) {
   const cv = $('chart');
   const dpr = window.devicePixelRatio || 1;
   const w = cv.clientWidth, h = 150;
-  if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+  if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; cv.style.height = `${h}px`; }
   const g = cv.getContext('2d');
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.clearRect(0, 0, w, h);
@@ -137,7 +146,7 @@ function drawChart(history, theo) {
   g.setLineDash([]);
 
   if (history.length > 1) {
-    g.strokeStyle = '#2f6690'; g.lineWidth = 2;
+    g.strokeStyle = '#1B3A5C'; g.lineWidth = 2;
     g.beginPath();
     history.forEach(([t, v], i) => (i ? g.lineTo(X(t), Y(v)) : g.moveTo(X(t), Y(v))));
     g.stroke();
@@ -208,5 +217,99 @@ $('break').onclick = () => send('break', { station: selected });
 $('repair').onclick = () => send('repair', { station: selected });
 $('compare').onclick = () => send('compare', { duration: 3600 });
 $('csv').onclick = exportCsv;
+
+$('team-btn').onclick = () => $('team').showModal();
+
+// --------------------------------------------------------------- onglets
+let tab = 'live';
+$('tabs').onclick = (e) => {
+  const t = e.target.dataset.tab;
+  if (!t) return;
+  tab = t;
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.tab').forEach((el) => { el.hidden = el.id !== `tab-${t}`; });
+  if (t === 'history') loadRuns();
+};
+
+// ------------------------------------------------------------ historique
+async function loadRuns() {
+  const runs = await (await fetch('/api/runs')).json();
+  const sel = $('run-select');
+  const keep = sel.value;
+  sel.innerHTML = runs.map((r) => {
+    const d = new Date(r.started_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+    const live = state && r.id === state.run_id ? ' (en cours)' : '';
+    return `<option value="${r.id}">#${r.id} · ${r.label} · ${d} · ${r.samples} min${live}</option>`;
+  }).join('');
+  if (keep && runs.some((r) => String(r.id) === keep)) sel.value = keep;
+  if (runs.length) loadHistory(Number(sel.value));
+}
+
+async function loadHistory(id) {
+  $('run-csv').href = `/api/export.csv?run=${id}`;
+  const h = await (await fetch(`/api/history?run=${id}`)).json();
+  const sm = h.samples;
+  const last = sm[sm.length - 1];
+  const failures = h.events.filter((e) => e.kind === 'panne').length;
+  const avgThr = sm.length ? sm.reduce((a, s) => a + s.throughput, 0) / sm.length : 0;
+  const maxWip = sm.length ? Math.max(...sm.map((s) => s.wip)) : 0;
+  $('h-kpis').innerHTML = [
+    ['Durée enregistrée', `${sm.length} min`, 'relevés SQLite'],
+    ['Produits finis', last ? last.produced : 0, last ? `${last.rejected} rejets` : '–'],
+    ['Cadence moyenne', fmt(last ? last.throughput_avg : 0, 2), 'produits/min'],
+    ['Débit moyen (relevés)', fmt(avgThr, 2), 'produits/min'],
+    ['En-cours max', maxWip, 'produits'],
+    ['Pannes', failures, last ? `goulot : ${last.bottleneck}` : '–'],
+  ].map(([a, b, c]) => `<div class="kpi"><span>${a}</span><b>${b}</b><small>${c}</small></div>`).join('');
+
+  const names = ['Alimentation', 'Traitement', 'Contrôle qualité', 'Emballage'];
+  const util = last ? last.util : [0, 0, 0, 0];
+  const top = util.indexOf(Math.max(...util));
+  $('h-util').innerHTML = names.map((n, i) => `
+    <div class="bar ${i === top ? 'top' : ''}"><span>${n}</span>
+      <div class="track"><div class="fill" style="width:${Math.round(util[i] * 100)}%"></div></div>
+      <b>${pct(util[i])}</b></div>`).join('');
+  $('h-events').innerHTML = h.events.length
+    ? h.events.slice().reverse().map((e) => `<li class="${e.kind}"><time>${formatTime(e.t)}</time>${e.text}</li>`).join('')
+    : '<li class="muted">Aucun événement.</li>';
+  drawHistory(sm);
+}
+
+function drawHistory(sm) {
+  const cv = $('h-chart');
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth, h = 170;
+  cv.width = w * dpr; cv.height = h * dpr; cv.style.height = `${h}px`;
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  g.font = '10px system-ui'; g.fillStyle = '#64748b';
+  if (sm.length < 2) { g.fillText('Pas encore assez de relevés (1 par minute simulée).', 10, h / 2); return; }
+  const pad = { l: 28, r: 28, t: 8, b: 18 };
+  const pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
+  const t0 = sm[0].t, t1 = sm[sm.length - 1].t;
+  const maxThr = Math.max(2, Math.ceil(Math.max(...sm.map((s) => s.throughput)) + 1));
+  const maxWip = Math.max(5, Math.ceil(Math.max(...sm.map((s) => s.wip)) * 1.1));
+  const X = (t) => pad.l + pw * (t - t0) / (t1 - t0 || 1);
+  g.strokeStyle = '#e2e8f0';
+  for (let k = 0; k <= 4; k++) {
+    const y = pad.t + ph * k / 4;
+    g.beginPath(); g.moveTo(pad.l, y); g.lineTo(w - pad.r, y); g.stroke();
+    g.fillText(fmt(maxThr * (1 - k / 4), 0), 4, y + 3);
+    g.fillText(Math.round(maxWip * (1 - k / 4)), w - pad.r + 4, y + 3);
+  }
+  g.fillText(formatTime(t0), pad.l, h - 4);
+  g.fillText(formatTime(t1), w - pad.r - 60, h - 4);
+  const line = (get, max, color) => {
+    g.strokeStyle = color; g.lineWidth = 2; g.beginPath();
+    sm.forEach((s, i) => { const x = X(s.t), y = pad.t + ph * (1 - get(s) / max); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.stroke();
+  };
+  line((s) => s.wip, maxWip, '#B22A2E');
+  line((s) => s.throughput, maxThr, '#1B3A5C');
+}
+
+$('run-select').onchange = (e) => loadHistory(Number(e.target.value));
+$('run-refresh').onclick = loadRuns;
 
 connect();

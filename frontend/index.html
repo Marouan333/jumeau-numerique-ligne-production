@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Jumeau numérique – Ligne de production</title>
+  <title>Jumeau numérique – ENSAM Rabat</title>
+  <link rel="icon" href="assets/logo_ensam.png">
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
     { "imports": {
@@ -16,8 +17,12 @@
   <main id="viewport">
     <header class="topbar">
       <div class="brand">
-        <strong>Jumeau numérique</strong>
-        <span>Ligne de production · Industrie 4.0</span>
+        <img src="assets/logo_ensam.png" alt="ENSAM Rabat" class="logo">
+        <div>
+          <strong>Jumeau numérique d'une ligne de production</strong>
+          <span>ENSAM Rabat · Industrie 4.0 · Prof. M. Zemzami · 2026/2027</span>
+        </div>
+        <img src="assets/logo_um5.png" alt="Université Mohammed V de Rabat" class="logo um5">
       </div>
       <div class="sim-controls">
         <span id="conn" class="conn off">Déconnecté</span>
@@ -28,6 +33,7 @@
         </div>
         <button id="reset" class="btn">↺ Réinitialiser</button>
         <button id="view" class="btn">Vue globale</button>
+        <button id="team-btn" class="btn">Équipe</button>
       </div>
     </header>
     <div class="legend">
@@ -45,76 +51,170 @@
   </main>
 
   <aside id="panel">
-    <section>
-      <h2>Indicateurs (KPI)</h2>
-      <div class="kpis">
-        <div class="kpi"><span>Cadence réelle</span><b id="k-thr">–</b><small>produits/min (1 min glissante)</small></div>
-        <div class="kpi"><span>Cadence théorique</span><b id="k-theo">–</b><small id="k-theo-h">–</small></div>
-        <div class="kpi"><span>Produits finis</span><b id="k-prod">–</b><small id="k-avg">–</small></div>
-        <div class="kpi"><span>Rejets</span><b id="k-rej">–</b><small id="k-rej-pct">–</small></div>
-        <div class="kpi"><span>En-cours (WIP)</span><b id="k-wip">–</b><small id="k-lead">–</small></div>
-        <div class="kpi warn"><span>Goulot d'étranglement</span><b id="k-bn" class="txt">–</b><small id="k-bn-t">–</small></div>
-      </div>
-    </section>
+    <nav class="tabs" id="tabs">
+      <button data-tab="live" class="on">Supervision</button>
+      <button data-tab="history">Historique</button>
+      <button data-tab="help">Aide</button>
+    </nav>
 
-    <section>
-      <h2>État des postes</h2>
-      <table class="stations">
-        <thead><tr><th>Poste</th><th>État</th><th>File</th><th>Util.</th><th>Dispo.</th><th>Attente</th></tr></thead>
-        <tbody id="st-body"></tbody>
-      </table>
-    </section>
+    <div class="tab" id="tab-live">
+      <section>
+        <h2>Indicateurs (KPI)</h2>
+        <div class="kpis">
+          <div class="kpi"><span>Cadence réelle</span><b id="k-thr">–</b><small>produits/min (1 min glissante)</small></div>
+          <div class="kpi"><span>Cadence théorique</span><b id="k-theo">–</b><small id="k-theo-h">–</small></div>
+          <div class="kpi"><span>Produits finis</span><b id="k-prod">–</b><small id="k-avg">–</small></div>
+          <div class="kpi"><span>Rejets</span><b id="k-rej">–</b><small id="k-rej-pct">–</small></div>
+          <div class="kpi"><span>En-cours (WIP)</span><b id="k-wip">–</b><small id="k-lead">–</small></div>
+          <div class="kpi warn"><span>Goulot d'étranglement</span><b id="k-bn" class="txt">–</b><small id="k-bn-t">–</small></div>
+        </div>
+      </section>
 
-    <section>
-      <h2>Débit de production</h2>
-      <canvas id="chart" height="150"></canvas>
-      <div class="chart-legend"><span class="l-real">Débit réel</span><span class="l-theo">Théorique</span></div>
-    </section>
+      <section>
+        <h2>État des postes</h2>
+        <table class="stations">
+          <thead><tr><th>Poste</th><th>État</th><th>File</th><th>Util.</th><th>Dispo.</th><th>Attente</th></tr></thead>
+          <tbody id="st-body"></tbody>
+        </table>
+      </section>
 
-    <section>
-      <h2>Scénario d'optimisation</h2>
-      <div class="presets" id="presets"></div>
-      <div class="field">
-        <label for="t-ctrl">Temps de contrôle qualité <b id="t-ctrl-v">15 s</b></label>
-        <input type="range" id="t-ctrl" min="4" max="20" step="1" value="15">
-      </div>
-      <div class="field">
-        <label for="t-trait">Temps de traitement <b id="t-trait-v">8 s</b></label>
-        <input type="range" id="t-trait" min="4" max="20" step="1" value="8">
-      </div>
-      <div class="field row">
-        <label>Postes de contrôle en parallèle</label>
-        <div class="seg" id="srv-ctrl"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
-      </div>
-      <label class="toggle"><input type="checkbox" id="adaptive"><span>Convoyeur adaptatif (limite les files à 3)</span></label>
-      <label class="toggle"><input type="checkbox" id="failures" checked><span>Pannes aléatoires</span></label>
-    </section>
+      <section>
+        <h2>Débit de production</h2>
+        <canvas id="chart" height="150"></canvas>
+        <div class="chart-legend"><span class="l-real">Débit réel</span><span class="l-theo">Théorique</span></div>
+      </section>
 
-    <section>
-      <h2>Machine sélectionnée</h2>
-      <div class="field row">
-        <select id="sel-station"></select>
-        <button id="break" class="btn danger">Provoquer une panne</button>
-        <button id="repair" class="btn">Réparer</button>
-      </div>
-      <p class="muted" id="sel-info">–</p>
-    </section>
+      <section>
+        <h2>Scénario d'optimisation</h2>
+        <div class="presets" id="presets"></div>
+        <div class="field">
+          <label for="t-ctrl">Temps de contrôle qualité <b id="t-ctrl-v">15 s</b></label>
+          <input type="range" id="t-ctrl" min="4" max="20" step="1" value="15">
+        </div>
+        <div class="field">
+          <label for="t-trait">Temps de traitement <b id="t-trait-v">8 s</b></label>
+          <input type="range" id="t-trait" min="4" max="20" step="1" value="8">
+        </div>
+        <div class="field row">
+          <label>Postes de contrôle en parallèle</label>
+          <div class="seg" id="srv-ctrl"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="adaptive"><span>Convoyeur adaptatif (limite les files à 3)</span></label>
+        <label class="toggle"><input type="checkbox" id="failures" checked><span>Pannes aléatoires</span></label>
+      </section>
 
-    <section>
-      <h2>Comparaison avant / après</h2>
-      <p class="muted">Simule chaque scénario pendant 1 h (même graine aléatoire) côté backend.</p>
-      <div class="field row">
-        <button id="compare" class="btn primary">Lancer la comparaison</button>
-        <button id="csv" class="btn" disabled>Exporter CSV</button>
-      </div>
-      <div id="cmp-out"></div>
-    </section>
+      <section>
+        <h2>Machine sélectionnée</h2>
+        <div class="field row">
+          <select id="sel-station"></select>
+          <button id="break" class="btn danger">Provoquer une panne</button>
+          <button id="repair" class="btn">Réparer</button>
+        </div>
+        <p class="muted" id="sel-info">–</p>
+        <table class="mini"><tbody id="sel-stats"></tbody></table>
+      </section>
 
-    <section>
-      <h2>Journal</h2>
-      <ul id="events" class="events"></ul>
-    </section>
+      <section>
+        <h2>Comparaison avant / après</h2>
+        <p class="muted">Simule chaque scénario pendant 1 h (même graine aléatoire) côté backend.</p>
+        <div class="field row">
+          <button id="compare" class="btn primary">Lancer la comparaison</button>
+          <button id="csv" class="btn" disabled>Exporter CSV</button>
+        </div>
+        <div id="cmp-out"></div>
+      </section>
+
+      <section>
+        <h2>Journal</h2>
+        <ul id="events" class="events"></ul>
+      </section>
+    </div>
+
+    <div class="tab" id="tab-history" hidden>
+      <section>
+        <h2>Historique de production</h2>
+        <p class="muted">Chaque scénario appliqué ou remise à zéro crée une nouvelle exécution. Un relevé des KPI est enregistré dans SQLite chaque minute simulée.</p>
+        <div class="field row">
+          <select id="run-select"></select>
+          <button id="run-refresh" class="btn">Actualiser</button>
+        </div>
+        <div class="field row">
+          <a id="run-csv" class="btn" href="#">Exporter cette exécution (CSV)</a>
+          <a class="btn" href="/api/export.csv">Tout exporter</a>
+        </div>
+      </section>
+      <section>
+        <h2>Synthèse</h2>
+        <div class="kpis" id="h-kpis"></div>
+      </section>
+      <section>
+        <h2>Débit et en-cours dans le temps</h2>
+        <canvas id="h-chart" height="170"></canvas>
+        <div class="chart-legend"><span class="l-real">Débit (/min)</span><span class="l-wip">En-cours</span></div>
+      </section>
+      <section>
+        <h2>Utilisation moyenne des postes</h2>
+        <div id="h-util"></div>
+      </section>
+      <section>
+        <h2>Événements enregistrés</h2>
+        <ul id="h-events" class="events tall"></ul>
+      </section>
+    </div>
+
+    <div class="tab help" id="tab-help" hidden>
+      <section>
+        <h2>Prise en main</h2>
+        <ol>
+          <li><b>Observer la ligne.</b> Les produits partent de l'alimentation et passent par le traitement, le contrôle qualité puis l'emballage. Le voyant de chaque machine indique son état. Faites glisser pour tourner la vue, molette pour zoomer.</li>
+          <li><b>Lire les KPI.</b> La cadence réelle est mesurée sur la dernière minute simulée. Le goulot est le poste le plus occupé qui n'est pas bloqué par l'aval.</li>
+          <li><b>Tester un scénario.</b> Choisissez un scénario ou modifiez les réglages : la simulation repart et les KPI évoluent en direct.</li>
+          <li><b>Comparer.</b> « Lancer la comparaison » simule 1 h de chaque scénario dans les mêmes conditions et affiche le gain par rapport à la situation initiale.</li>
+          <li><b>Analyser l'historique.</b> L'onglet Historique conserve chaque exécution (SQLite) et permet l'export CSV.</li>
+        </ol>
+      </section>
+      <section>
+        <h2>États des machines</h2>
+        <ul>
+          <li><b class="c-ok">En marche</b> : un produit est en cours de traitement.</li>
+          <li><b class="c-idle">En attente</b> : aucun produit à traiter (poste « affamé »).</li>
+          <li><b class="c-warn">Bloqué</b> : produit terminé mais la file aval est pleine.</li>
+          <li><b class="c-bad">En panne</b> : arrêt jusqu'à la réparation (aléatoire ou provoquée).</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Raccourcis</h2>
+        <ul>
+          <li>Clic sur une machine ou une ligne du tableau : sélection et zoom.</li>
+          <li>« Vue globale » : recadre toute la ligne.</li>
+          <li>Vitesse ×1 à ×20 : accélère le temps simulé.</li>
+        </ul>
+        <p class="muted">Manuel complet : <code>docs/manuel-utilisateur.md</code> dans le dépôt.</p>
+      </section>
+    </div>
   </aside>
+
+  <dialog id="team">
+    <header>
+      <img src="assets/logo_ensam.png" alt="" class="logo">
+      <div>
+        <strong>Équipe projet</strong>
+        <span>Mini-projet Industrie 4.0 · Encadré par Prof. Maria Zemzami</span>
+      </div>
+    </header>
+    <table>
+      <thead><tr><th>Membre</th><th>Responsabilité</th><th>Dans le code</th></tr></thead>
+      <tbody>
+        <tr><td>Aymane ISSAMI</td><td>3D &amp; Architecture</td><td><code>frontend/js/scene.js</code></td></tr>
+        <tr><td>Marouan EZBAKHE</td><td>3D &amp; Animation</td><td><code>frontend/js/scene.js</code></td></tr>
+        <tr><td>Hiba BENZAHRA</td><td>Simulation industrielle</td><td><code>backend/sim.py</code></td></tr>
+        <tr><td>Zaid HSAIN</td><td>Backend &amp; Communication</td><td><code>backend/server.py</code>, <code>storage.py</code></td></tr>
+        <tr><td>Houssam KICHCHOU</td><td>Dashboard &amp; KPI</td><td><code>frontend/js/app.js</code></td></tr>
+        <tr><td>Mohamed HAMDOUCH</td><td>Optimisation &amp; Validation</td><td><code>compare_presets</code>, <code>tests/</code></td></tr>
+      </tbody>
+    </table>
+    <form method="dialog"><button class="btn primary">Fermer</button></form>
+  </dialog>
 
   <script type="module" src="js/app.js"></script>
 </body>
