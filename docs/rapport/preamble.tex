@@ -1,0 +1,163 @@
+% ============================================================================
+% Préambule --- Rapport de mini-projet « Jumeau numérique d'une ligne de production »
+% ENSAM Rabat --- Filière INDIA&SD --- Industrie 4.0 --- Année Universitaire 2026/2027
+% Gabarit repris du rapport de stage PIPER Speech (même charte : bleu marine ENSAM).
+% ============================================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tcolorbox}
+\usepackage{acronym}
+\usepackage{csquotes}
+\usepackage{colortbl}
+\usepackage{multirow}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, calc}
+
+% ---------------------------- Mise en page ----------------------------------
+\geometry{a4paper, margin=2.5cm, headheight=15pt}
+
+% Couleur principale : bleu marine académique ENSAM (identique au rapport PIPER),
+% couleur secondaire : rouge du logo ENSAM.
+\definecolor{ensambleu}{HTML}{1B3A5C}
+\definecolor{ensamrouge}{HTML}{B22A2E}
+\definecolor{lienviolet}{HTML}{4A148C}
+\definecolor{etatmarche}{HTML}{22C55E}
+\definecolor{etatattente}{HTML}{94A3B8}
+\definecolor{etatbloque}{HTML}{F59E0B}
+\definecolor{etatpanne}{HTML}{EF4444}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=lienviolet,
+    urlcolor=lienviolet,
+    citecolor=lienviolet,
+    pdftitle={Jumeau numérique d'une ligne de production},
+    pdfauthor={Issami, Ezbakhe, Benzahra, Hsain, Kichchou, Hamdouch}
+}
+
+% ---------------------------- Listings (code) -------------------------------
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codegreen}{HTML}{28A745}
+\definecolor{codepurple}{HTML}{6F42C1}
+\definecolor{codegray}{HTML}{6A737D}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{codebg},
+    commentstyle=\color{codegray}\itshape,
+    keywordstyle=\color{codepurple}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{gray!30},
+    extendedchars=true,
+    inputencoding=utf8,
+    literate=%
+      {é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {ë}{{\"e}}1
+      {à}{{\`a}}1 {â}{{\^a}}1 {ä}{{\"a}}1
+      {î}{{\^i}}1 {ï}{{\"i}}1
+      {ô}{{\^o}}1 {ö}{{\"o}}1
+      {ù}{{\`u}}1 {û}{{\^u}}1 {ü}{{\"u}}1
+      {ç}{{\c c}}1 {Ç}{{\c C}}1
+      {É}{{\'E}}1 {È}{{\`E}}1 {À}{{\`A}}1 {×}{{$\times$}}1
+}
+\lstset{style=mystyle}
+
+% ---------------------------- En-tête / pied --------------------------------
+\renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter}{}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\nouppercase{\leftmark}}
+\fancyhead[R]{\small Jumeau numérique --- Industrie 4.0}
+\fancyfoot[L]{\footnotesize ENSAM Rabat --- Année Universitaire 2026/2027}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[L]{\footnotesize ENSAM Rabat --- Année Universitaire 2026/2027}%
+  \fancyfoot[R]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0.4pt}%
+}
+
+% ---------------------------- Titres chapitres ------------------------------
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{ensambleu}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-20pt}{30pt}
+
+% ---------------------------- Légendes --------------------------------------
+\captionsetup{font=small, labelfont=bf, labelsep=period}
+
+% ---------------------------- Macros utiles ---------------------------------
+\newcommand{\produit}{\textbf{jumeau numérique}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\newtcolorbox{callout}[1][]{colback=ensambleu!5, colframe=ensambleu, sharp corners,
+  boxrule=0.5pt, left=8pt, right=8pt, top=6pt, bottom=6pt, #1}
+\newtcolorbox{success}[1][]{colback=green!6, colframe=green!60!black, sharp corners,
+  boxrule=0.5pt, left=8pt, right=8pt, top=6pt, bottom=6pt, #1}
+\newtcolorbox{warn}[1][]{colback=orange!6, colframe=orange!70!black, sharp corners,
+  boxrule=0.5pt, left=8pt, right=8pt, top=6pt, bottom=6pt, #1}
+
+\setlist[itemize]{itemsep=2pt, topsep=3pt}
+\setlist[enumerate]{itemsep=2pt, topsep=3pt}
+
+% ---------------------------- Acronymes -------------------------------------
+\acrodef{3D}{Trois dimensions}
+\acrodef{API}{Application Programming Interface}
+\acrodef{CSV}{Comma-Separated Values}
+\acrodef{ENSAM}{École Nationale Supérieure d'Arts et Métiers}
+\acrodef{ERP}{Enterprise Resource Planning}
+\acrodef{IHM}{Interface Homme-Machine}
+\acrodef{INDIA}[INDIA\&SD]{Ingénierie Numérique en Data Science, Intelligence Artificielle \& Santé Digitale}
+\acrodef{IoT}{Internet of Things}
+\acrodef{JSON}{JavaScript Object Notation}
+\acrodef{KPI}{Key Performance Indicator}
+\acrodef{MES}{Manufacturing Execution System}
+\acrodef{MTBF}{Mean Time Between Failures}
+\acrodef{MTTR}{Mean Time To Repair}
+\acrodef{OPC}[OPC UA]{Open Platform Communications Unified Architecture}
+\acrodef{PLC}{Programmable Logic Controller}
+\acrodef{REST}{Representational State Transfer}
+\acrodef{SQL}{Structured Query Language}
+\acrodef{TRS}{Taux de Rendement Synthétique}
+\acrodef{WIP}{Work In Progress (en-cours)}
+\acrodef{WS}{WebSocket}
+
+\endinput

@@ -1,0 +1,53 @@
+\chapter{Résultats des tests automatisés}
+\label{ann:tests}
+
+Sortie de \code{python -m pytest -rA} sur le dépôt (23 tests, tous réussis, environ 2~s).
+
+\begin{lstlisting}[language={}, numbers=none, basicstyle=\ttfamily\scriptsize]
+tests/test_api.py::test_websocket_etat_et_commandes                         PASSED
+tests/test_api.py::test_api_historique_et_export                            PASSED
+tests/test_sim.py::test_debit_regime_egal_au_debit_theorique[initial-4.0]   PASSED
+tests/test_sim.py::test_debit_regime_egal_au_debit_theorique[controle_auto-7.5]   PASSED
+tests/test_sim.py::test_debit_regime_egal_au_debit_theorique[double_controle-7.5] PASSED
+tests/test_sim.py::test_debit_theorique_calcule                             PASSED
+tests/test_sim.py::test_conservation_des_produits[initial]                  PASSED
+tests/test_sim.py::test_conservation_des_produits[controle_auto]            PASSED
+tests/test_sim.py::test_conservation_des_produits[double_controle]          PASSED
+tests/test_sim.py::test_conservation_des_produits[convoyeur_adaptatif]      PASSED
+tests/test_sim.py::test_files_ne_depassent_pas_la_capacite[initial]         PASSED
+tests/test_sim.py::test_files_ne_depassent_pas_la_capacite[controle_auto]   PASSED
+tests/test_sim.py::test_files_ne_depassent_pas_la_capacite[double_controle] PASSED
+tests/test_sim.py::test_files_ne_depassent_pas_la_capacite[convoyeur_adaptatif] PASSED
+tests/test_sim.py::test_utilisation_et_disponibilite_bornees                PASSED
+tests/test_sim.py::test_pannes_reduisent_disponibilite_et_debit             PASSED
+tests/test_sim.py::test_panne_provoquee_arrete_le_poste                     PASSED
+tests/test_sim.py::test_rejets_proches_du_taux_parametre                    PASSED
+tests/test_sim.py::test_goulot_identifie_et_deplace                         PASSED
+tests/test_sim.py::test_convoyeur_adaptatif_reduit_en_cours_sans_perte_de_debit PASSED
+tests/test_sim.py::test_comparaison_reproductible                           PASSED
+tests/test_sim.py::test_changement_de_machines_en_cours_de_route            PASSED
+tests/test_sim.py::test_stockage_historique_et_export_csv                   PASSED
+======================== 23 passed in 2.11s ========================
+\end{lstlisting}
+
+\section*{Résultats sans pannes}
+
+Pour isoler l'effet des pannes, la comparaison a aussi été exécutée sans pannes (même graine)~:
+
+\begin{table}[H]
+\centering
+\caption{Comparaison sur 1~h simulée, pannes désactivées.}
+\label{tab:sans_pannes}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Indicateur} & \textbf{Initiale} & \textbf{Contrôle 8~s} & \textbf{2 contrôles} & \textbf{Adaptatif} \\
+\midrule
+Produits finis / h & 226 & 422 & 421 & 226 \\
+Rejets & 12 & 24 & 24 & 12 \\
+Cadence moyenne (/min) & 3,77 & 7,03 & 7,02 & 3,77 \\
+Attente au contrôle (s) & 114 & 0 & 0 & 40 \\
+En-cours moyen & 19,2 & 12,1 & 13,0 & 9,5 \\
+Utilisation du goulot & 99,5~\% & 99,8~\% & 99,8~\% & 99,5~\% \\
+\bottomrule
+\end{tabular}
+\end{table}

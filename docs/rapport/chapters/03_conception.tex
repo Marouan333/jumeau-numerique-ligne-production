@@ -1,0 +1,166 @@
+% ============================================================================
+% Chapitre 3 --- Conception
+% ============================================================================
+\chapter{Conception du jumeau numérique}
+\label{chap:conception}
+
+\section{Architecture générale}
+
+Le système est découpé en trois couches, représentées en figure~\ref{fig:architecture}~: la \textbf{ligne simulée}, qui joue le rôle du système physique~; le \textbf{backend}, qui la fait avancer, la diffuse et en garde la mémoire~; et l'\textbf{interface}, qui la représente et la pilote.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw=ensambleu, fill=ensambleu!6, rounded corners=3pt, minimum width=3.4cm, minimum height=1.05cm, align=center, font=\small},
+  db/.style={draw=ensamrouge, fill=ensamrouge!6, rounded corners=3pt, minimum width=3.4cm, minimum height=1.05cm, align=center, font=\small},
+  grp/.style={draw=gray!60, dashed, rounded corners=6pt, inner sep=8pt},
+  arr/.style={-{Stealth[length=2.5mm]}, thick, ensambleu},
+  lbl/.style={font=\scriptsize, fill=white, inner sep=1.5pt}
+]
+\node[box] (scene) {\textbf{scene.js}\\ scène 3D Three.js};
+\node[box, below=0.7cm of scene] (app) {\textbf{app.js}\\ tableau de bord, commandes};
+\node[grp, fit=(scene)(app), label={[font=\small\bfseries]above:Navigateur (interface)}] (nav) {};
+
+\node[box, right=4.2cm of scene] (server) {\textbf{server.py}\\ FastAPI, WebSocket, REST};
+\node[box, below=0.7cm of server] (sim) {\textbf{sim.py}\\ modèle de la ligne, KPI};
+\node[db, below=0.7cm of sim] (storage) {\textbf{storage.py}\\ historique SQLite};
+\node[grp, fit=(server)(sim)(storage), label={[font=\small\bfseries]above:Backend Python}] (back) {};
+
+\draw[arr] ([yshift=4pt]server.west) -- node[lbl, above=2pt]{état JSON, 10~Hz} ([yshift=4pt]nav.east |- server.west);
+\draw[arr] ([yshift=-14pt]nav.east |- server.west) -- node[lbl, below=2pt]{commandes} ([yshift=-14pt]server.west);
+\draw[arr, dashed] (app.east) -- node[lbl, below=2pt]{REST : historique, CSV} (app.east -| back.west);
+\draw[arr] (server) -- node[lbl, right]{pas de 0,05 s} (sim);
+\draw[arr] (sim) -- node[lbl, right]{1 relevé / min simulée} (storage);
+\draw[arr] (app) -- node[lbl, left]{même message} (scene);
+\end{tikzpicture}
+\caption{Architecture du jumeau numérique.}
+\label{fig:architecture}
+\end{figure}
+
+Le choix structurant est que \textbf{la scène \ac{3D} et le tableau de bord lisent le même message}. Le backend n'envoie pas une information à la \ac{3D} et une autre au tableau de bord~: il envoie un état unique de la ligne (machines, files, produits, \ac{KPI}), et chaque vue en extrait ce qu'elle affiche. Il est donc impossible que la \ac{3D} montre une machine en panne pendant que le tableau de bord la déclare en marche.
+
+\section{Modèle de simulation de la ligne}
+
+\subsection{Flux physique}
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  st/.style={draw=ensambleu, fill=ensambleu, text=white, rounded corners=2pt, minimum width=2.1cm, minimum height=1cm, align=center, font=\small\bfseries},
+  buf/.style={draw=gray!70, fill=gray!10, minimum width=1.1cm, minimum height=0.6cm, align=center, font=\scriptsize},
+  arr/.style={-{Stealth[length=2mm]}, thick}
+]
+\node[st] (a) {Alimen-\\tation\\[-2pt]{\scriptsize 5 s}};
+\node[buf, right=0.45cm of a] (b1) {file $\leq$ 8};
+\node[st, right=0.45cm of b1] (t) {Traite-\\ment\\[-2pt]{\scriptsize 8 s}};
+\node[buf, right=0.45cm of t] (b2) {file $\leq$ 8};
+\node[st, fill=ensamrouge, draw=ensamrouge, right=0.45cm of b2] (c) {Contrôle\\qualité\\[-2pt]{\scriptsize 15 s}};
+\node[buf, right=0.45cm of c] (b3) {file $\leq$ 8};
+\node[st, right=0.45cm of b3] (e) {Embal-\\lage\\[-2pt]{\scriptsize 7 s}};
+\draw[arr] (a) -- (b1); \draw[arr] (b1) -- (t); \draw[arr] (t) -- (b2); \draw[arr] (b2) -- (c);
+\draw[arr] (c) -- (b3); \draw[arr] (b3) -- (e);
+\draw[arr] (e.east) -- ++(0.6,0) node[right, font=\scriptsize]{produits finis};
+\draw[arr, ensamrouge] (c.south) -- ++(0,-0.7) node[below, font=\scriptsize]{rejets (5~\%)};
+\node[font=\scriptsize, gray, below=0.25cm of b1] {convoyeur 2 s};
+\node[font=\scriptsize, gray, below=0.25cm of b3] {convoyeur 2 s};
+\end{tikzpicture}}
+\caption{Flux des produits dans la ligne modélisée.}
+\label{fig:flux}
+\end{figure}
+
+L'alimentation dispose d'une matière première illimitée et produit dès qu'elle est libre. Chaque produit terminé est déposé sur le convoyeur (2~s de transfert) puis rejoint la file du poste suivant. Les files ont une \textbf{capacité de 8 produits}~: si la file aval, convoyeur compris, est pleine, le poste qui vient de terminer garde son produit et se \textbf{bloque}. C'est ce mécanisme qui propage un goulot ou une panne vers l'amont, comme sur une vraie ligne. Au contrôle qualité, chaque produit est rejeté avec une probabilité de 5~\% et retiré de la ligne.
+
+\subsection{États d'une machine}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  s/.style={draw, circle, minimum size=1.9cm, align=center, font=\small\bfseries, line width=1pt},
+  arr/.style={-{Stealth[length=2mm]}, thick},
+  lbl/.style={font=\scriptsize, align=center}
+]
+\node[s, draw=etatattente, fill=etatattente!15] (att) {En\\attente};
+\node[s, draw=etatmarche, fill=etatmarche!15, right=3cm of att] (mar) {En\\marche};
+\node[s, draw=etatbloque, fill=etatbloque!15, right=3cm of mar] (blo) {Bloquée};
+\node[s, draw=etatpanne, fill=etatpanne!15, below=1.6cm of mar] (pan) {En\\panne};
+\draw[arr] (att) to[bend left=20] node[lbl, above]{produit disponible} (mar);
+\draw[arr] (mar) to[bend left=20] node[lbl, below]{fini, file aval libre,\\pas de produit en amont} (att);
+\draw[arr] (mar) to[bend left=20] node[lbl, above]{fini, file aval pleine} (blo);
+\draw[arr] (blo) to[bend left=20] node[lbl, below]{place libérée} (mar);
+\draw[arr] ([xshift=-4pt]mar.south) to[bend right=25] node[lbl, left=2pt]{panne\\(MTBF)} ([xshift=-4pt]pan.north);
+\draw[arr] ([xshift=4pt]pan.north) to[bend right=25] node[lbl, right=2pt]{réparation\\(MTTR)} ([xshift=4pt]mar.south);
+\end{tikzpicture}
+\caption{Machine à états d'un poste (le voyant de la scène 3D reprend ces quatre couleurs).}
+\label{fig:etats}
+\end{figure}
+
+\subsection{Pas de temps et pannes}
+
+La simulation avance par \textbf{pas de temps fixe} de 0{,}05~s simulée. À chaque pas, elle traite dans l'ordre les pannes et réparations, les transferts sur le convoyeur, puis les postes \textbf{de l'aval vers l'amont}~: l'emballage libère sa place avant que le contrôle ne tente d'y déposer un produit, ce qui évite un blocage artificiel d'un pas. Un pas fixe a été préféré à une simulation à événements discrets pure parce qu'il produit naturellement l'avancement continu dont l'animation \ac{3D} a besoin (position des produits sur le convoyeur, barre de progression).
+
+Les pannes suivent un modèle classique de fiabilité~: le temps de bon fonctionnement avant panne suit une loi exponentielle de moyenne \ac{MTBF}, et la durée de réparation est tirée uniformément entre 60~\% et 140~\% du \ac{MTTR} nominal.
+
+\begin{table}[H]
+\centering
+\caption{Paramètres de fiabilité par défaut (\code{DEFAULT\_CONFIG} dans \code{sim.py}).}
+\label{tab:fiabilite}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & \textbf{Alimentation} & \textbf{Traitement} & \textbf{Contrôle} & \textbf{Emballage} \\
+\midrule
+\ac{MTBF} (s) & 600 & 500 & 400 & 600 \\
+\ac{MTTR} (s) & 20 & 30 & 25 & 20 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Indicateurs calculés}
+
+\begin{itemize}
+  \item \textbf{Cadence réelle}~: produits finis sur la dernière minute simulée glissante.
+  \item \textbf{Cadence théorique}~: $60 / \max_i (t_i / n_i)$, où $t_i$ est le temps de cycle du poste $i$ et $n_i$ son nombre de machines en parallèle.
+  \item \textbf{Taux d'utilisation} d'un poste~: temps passé à traiter / (temps écoulé $\times$ nombre de machines).
+  \item \textbf{Disponibilité}~: $1 - $ temps en panne / temps écoulé~; \textbf{\ac{MTBF} et \ac{MTTR} observés} par poste.
+  \item \textbf{En-cours} (\ac{WIP}), \textbf{temps de séjour} moyen d'un produit fini, \textbf{attente moyenne} dans chaque file.
+  \item \textbf{Goulot observé}~: le poste qui maximise \enquote{utilisation $-$ temps bloqué}. Un poste amont bloqué paraît occupé (il garde son produit) mais il ne limite pas la ligne~; retrancher le temps bloqué évite cette erreur. Pendant les quatre premières minutes, le temps que les files se forment, le goulot théorique est affiché.
+\end{itemize}
+
+\section{Protocole d'échange}
+
+Le backend expose un point d'accès \ac{WS} \code{/ws}. Toutes les 100~ms, il envoie un message \code{state} au format \ac{JSON}~:
+
+\begin{lstlisting}[language=Java, caption={Message d'état (extrait).}, label=lst:state]
+{ "type": "state", "speed": 4, "paused": false, "preset": "initial",
+  "config":   { "times": [5, 8, 15, 7], "servers": [1, 1, 1, 1], ... },
+  "stations": [{ "name": "Contrôle qualité", "state": "marche", "queue": 6,
+                 "util": 0.96, "avail": 0.97, "servers": [{ "progress": 0.4 }] }],
+  "products": [{ "id": 12, "st": 2, "s": "q", "k": 0 }],
+  "kpi":      { "throughput_now": 3.9, "theoretical": 4.0, "produced": 120, ... },
+  "events":   [{ "t": 31.0, "text": "Panne : Contrôle qualité (17 s)" }],
+  "exits":    [[11, "ok"]] }
+\end{lstlisting}
+
+Chaque produit est décrit par sa position logique (poste, \code{q}~en file, \code{p}~en traitement, \code{t}~sur le convoyeur, et sa progression)~: c'est le navigateur qui la traduit en coordonnées \ac{3D}. Le backend reste ainsi indépendant de la représentation graphique. Dans l'autre sens, l'interface envoie des commandes courtes (\code{\{"cmd": "set\_time", "station": 2, "value": 8\}}). L'historique, qui n'a pas besoin du temps réel, est servi par trois points d'accès \ac{REST}~: \code{/api/runs}, \code{/api/history} et \code{/api/export.csv}. Le protocole complet figure en annexe~\ref{ann:protocole}.
+
+\section{Répartition des rôles}
+
+\begin{table}[H]
+\centering
+\caption{Répartition des responsabilités et correspondance dans le code.}
+\label{tab:roles}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{Membre} & \textbf{Responsabilité} & \textbf{Livrable dans le dépôt} \\
+\midrule
+Aymane \textsc{Issami} & 3D \& Architecture & Architecture globale, scène et implantation spatiale (\code{scene.js}) \\
+Marouan \textsc{Ezbakhe} & 3D \& Animation & Modèles des machines, animations, états visuels (\code{scene.js}) \\
+Hiba \textsc{Benzahra} & Simulation industrielle & Logique de la ligne, cycles, pannes, données (\code{sim.py}) \\
+Zaid \textsc{Hsain} & Backend \& Communication & Serveur \ac{WS}/\ac{REST}, synchronisation, stockage (\code{server.py}, \code{storage.py}) \\
+Houssam \textsc{Kichchou} & Dashboard \& KPI & Supervision, \ac{KPI}, historique et statistiques (\code{app.js}) \\
+Mohamed \textsc{Hamdouch} & Optimisation \& Validation & Scénarios, comparaison avant/après, tests (\code{compare\_presets}, \code{tests/}) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Conformément au point d'organisation du plan de travail, le protocole de la section précédente est le contrat entre les équipes \ac{3D}, simulation et backend~: les états des machines et le format des messages y sont fixés, si bien que chaque brique peut évoluer sans casser les autres. Le découpage du code suit d'ailleurs exactement cette répartition~: un fichier principal par responsabilité.

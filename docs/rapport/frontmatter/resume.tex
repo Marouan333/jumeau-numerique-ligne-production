@@ -1,0 +1,27 @@
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+\thispagestyle{plain}
+
+Ce rapport présente la conception et la réalisation d'un \textbf{jumeau numérique d'une ligne de production simplifiée}, dans le cadre du mini-projet Industrie~4.0 de l'\ac{ENSAM} Rabat. La ligne étudiée comporte quatre postes successifs --- alimentation (5~s), traitement (8~s), contrôle qualité (15~s) et emballage (7~s) --- reliés par un convoyeur, avec des files d'attente de capacité limitée, des pannes aléatoires et un taux de rejet de 5~\% au contrôle.
+
+Le système repose sur une architecture en trois briques. Un \textbf{modèle de simulation} écrit en Python reproduit le comportement de la ligne par pas de temps de 0{,}05~s~: états des machines (en marche, en attente, bloquée, en panne), blocages de l'amont, propagation des pannes et calcul des \ac{KPI}. Un \textbf{backend} FastAPI diffuse l'état complet de la ligne dix fois par seconde par \ac{WS}, reçoit les commandes de l'opérateur et enregistre l'historique de production dans une base SQLite. Une \textbf{interface} web affiche la ligne en \ac{3D} avec Three.js et un tableau de bord de supervision synchronisé sur le même flux de données.
+
+Le scénario d'optimisation porte sur le goulot d'étranglement du contrôle qualité. Sur une heure simulée avec pannes et une graine aléatoire identique pour tous les scénarios, la ligne initiale produit \textbf{218 produits}. Un contrôle automatisé à 8~s ou un second poste de contrôle en parallèle portent la production à \textbf{390} et \textbf{389 produits} (+79~\%), divisent l'attente au contrôle par 7 à 13 et déplacent le goulot vers le poste de traitement. Un convoyeur adaptatif ne change pas le débit mais réduit l'en-cours moyen de 51~\%. La cohérence du modèle est vérifiée par 23 tests automatisés (débit de régime égal au débit théorique à 5~\% près, conservation des produits, capacité des files, effet des pannes). Les limites --- données entièrement simulées, absence de connexion à des équipements réels --- sont discutées en conclusion.
+
+\vspace{0.4cm}
+\textbf{Mots-clés~:} Industrie~4.0, jumeau numérique, simulation de ligne de production, goulot d'étranglement, supervision temps réel, WebSocket, Three.js, indicateurs de performance.
+
+\vspace{1.2cm}
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\thispagestyle{plain}
+
+This report presents the design and implementation of a \textbf{digital twin of a simplified production line}, carried out as part of the Industry~4.0 mini-project at \ac{ENSAM} Rabat. The line has four successive stations --- feeding (5~s), processing (8~s), quality control (15~s) and packaging (7~s) --- linked by a conveyor, with limited-capacity buffers, random breakdowns and a 5\% reject rate at quality control.
+
+The system is built from three components. A \textbf{simulation model} written in Python reproduces the behaviour of the line in 0.05~s time steps: machine states (running, idle, blocked, down), upstream blocking, failure propagation and \ac{KPI} computation. A FastAPI \textbf{backend} streams the full line state ten times per second over \ac{WS}, receives operator commands and stores the production history in an SQLite database. A web \textbf{interface} renders the line in \ac{3D} with Three.js, together with a supervision dashboard synchronised on the same data stream.
+
+The optimisation scenario targets the quality-control bottleneck. Over one simulated hour with breakdowns and the same random seed for every scenario, the initial line produces \textbf{218 products}. An automated 8~s inspection or a second parallel inspection station raise output to \textbf{390} and \textbf{389 products} (+79\%), cut the waiting time at inspection by a factor of 7 to 13, and shift the bottleneck to the processing station. An adaptive conveyor leaves throughput unchanged but reduces average work-in-progress by 51\%. Model consistency is checked by 23 automated tests (steady-state throughput within 5\% of theory, product conservation, buffer capacity, failure effects). The limitations --- fully simulated data, no connection to real equipment --- are discussed in the conclusion.
+
+\vspace{0.4cm}
+\textbf{Keywords:} Industry~4.0, digital twin, production line simulation, bottleneck, real-time supervision, WebSocket, Three.js, performance indicators.

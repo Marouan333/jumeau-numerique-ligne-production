@@ -1,0 +1,14 @@
+% ============================================================================
+% Introduction générale
+% ============================================================================
+\chapter*{Introduction générale}
+\addcontentsline{toc}{chapter}{Introduction générale}
+\markboth{Introduction générale}{}
+
+Modifier une ligne de production réelle coûte cher~: chaque essai immobilise des machines, consomme de la matière et fait courir un risque sur la production. L'une des promesses de l'Industrie~4.0 est de déplacer une partie de ces essais vers un modèle virtuel fidèle de l'installation, le \textbf{jumeau numérique}, alimenté par des données et capable de répondre à la question \enquote{que se passerait-il si~?} avant toute intervention physique.
+
+Ce mini-projet, troisième sujet de la liste proposée par Prof.~Maria Zemzami~\cite{zemzami2026}, a pour objectif de \textbf{modéliser une ligne de production simplifiée sous forme de jumeau numérique, permettant de simuler son comportement et de tester des scénarios d'optimisation}. Trois livrables sont attendus~: un modèle de simulation du système physique, une interface synchronisée avec des données simulées, et un scénario d'optimisation testé et documenté.
+
+Nous avons réalisé ces trois livrables sous la forme d'une application complète, développée à six et versionnée dans un dépôt Git~: une simulation Python de la ligne, un backend temps réel qui la diffuse par WebSocket et en conserve l'historique, une scène \ac{3D} Three.js et un tableau de bord de supervision, ainsi qu'un module de comparaison de scénarios et une suite de tests automatisés qui valident la cohérence du modèle.
+
+Le rapport suit le plan du cahier des charges. Le chapitre~\ref{chap:contexte} situe le projet dans l'Industrie~4.0 et en fixe le périmètre et les objectifs. Le chapitre~\ref{chap:specs} détaille les spécifications fonctionnelles et techniques. Le chapitre~\ref{chap:conception} présente la conception (architecture, modèle de simulation, protocole d'échange, répartition des rôles), et le chapitre~\ref{chap:implementation} sa réalisation. Le chapitre~\ref{chap:optimisation} documente le scénario d'optimisation et ses résultats chiffrés. Le chapitre~\ref{chap:organisation} traite des aspects organisationnels et humains, et le chapitre~\ref{chap:conclusion} dresse le bilan, les limites assumées et les perspectives.

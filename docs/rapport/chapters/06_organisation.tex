@@ -1,0 +1,51 @@
+% ============================================================================
+% Chapitre 6 --- Aspects organisationnels et humains
+% ============================================================================
+\chapter{Aspects organisationnels et humains}
+\label{chap:organisation}
+
+Un jumeau numérique ne crée de la valeur que s'il est utilisé par les personnes qui pilotent la ligne. Ce chapitre répond à la troisième partie du cahier des charges, en se plaçant dans l'hypothèse d'un déploiement du jumeau dans un atelier réel.
+
+\section{Formation des opérateurs}
+
+\begin{table}[H]
+\centering
+\caption{Parcours de formation proposé.}
+\label{tab:formation}
+\begin{tabularx}{\textwidth}{@{}p{2.6cm} p{1.5cm} X p{3.2cm}@{}}
+\toprule
+\textbf{Public} & \textbf{Durée} & \textbf{Contenu} & \textbf{Support} \\
+\midrule
+Opérateurs de ligne & 1~h & Lire la scène 3D (voyants, files, couleurs des produits), lire les \ac{KPI}, signaler un écart entre le jumeau et la ligne & Onglet Aide, démonstration guidée \\
+Chefs d'équipe & 2~h & Piloter un scénario, provoquer une panne en formation, lire l'historique, exporter les données & Manuel utilisateur, exercices \\
+Méthodes et maintenance & 0,5~journée & Notion de goulot, comparaison de scénarios, interprétation des écarts théorie/simulation, \ac{MTBF} et \ac{MTTR} & Rapport, données \ac{CSV} \\
+Équipe informatique & 0,5~journée & Architecture, protocole \ac{WS}, base SQLite, ajout d'un poste, tests & README, code et tests \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le jumeau sert lui-même d'outil de formation~: on peut provoquer une panne ou saturer un poste \textbf{sans aucun risque} pour la production, et montrer en quelques minutes simulées des phénomènes qui prendraient des heures à observer sur la ligne réelle.
+
+\section{Adaptation des processus de travail}
+
+\begin{itemize}
+  \item \textbf{Décision d'amélioration}~: toute modification de la ligne (temps de cycle, ajout d'un poste, nouvelle règle de convoyage) est d'abord simulée et comparée dans les mêmes conditions que la situation actuelle~; la décision s'appuie sur le tableau de comparaison exporté.
+  \item \textbf{Réunions de production}~: la revue quotidienne s'appuie sur l'historique (débit par heure, pannes, goulot observé) plutôt que sur des relevés manuels.
+  \item \textbf{Maintenance}~: les \ac{MTBF} et \ac{MTTR} observés par poste orientent la maintenance préventive vers les postes dont la panne coûte le plus de production, c'est-à-dire en priorité le goulot.
+  \item \textbf{Écart jumeau/réalité}~: un processus de recalage est nécessaire. Lorsque la ligne réelle s'écarte durablement de la simulation, les paramètres du modèle (temps de cycle, \ac{MTBF}, taux de rejet) sont mis à jour à partir des données mesurées.
+\end{itemize}
+
+\section{Gestion du changement}
+
+L'introduction d'un outil de supervision peut être perçue comme un outil de surveillance individuelle. Quatre mesures limitent ce risque~:
+
+\begin{enumerate}
+  \item \textbf{Associer les opérateurs dès la conception}~: ils connaissent les micro-arrêts et les contournements que les données ne montrent pas, et leur retour améliore la fidélité du modèle.
+  \item \textbf{Mesurer la ligne, pas les personnes}~: les \ac{KPI} affichés portent sur les postes et le flux, jamais sur un individu.
+  \item \textbf{Déployer progressivement}~: d'abord en salle de formation, puis en supervision passive à côté de la ligne, avant de l'utiliser pour décider d'investissements.
+  \item \textbf{Montrer un premier gain concret}~: le scénario du contrôle qualité, qui ne demande qu'une modification de poste pour un gain de près de 80~\%, est un bon premier cas d'usage à présenter.
+\end{enumerate}
+
+\section{Organisation de l'équipe projet}
+
+Le projet a été mené par une équipe de six, organisée selon la répartition du tableau~\ref{tab:roles}. Le travail suit les sept phases du plan de travail (annexe~\ref{ann:planning})~: analyse du besoin, modélisation \ac{3D}, simulation, backend, tableau de bord, optimisation et validation, rédaction. Le code est versionné dans un dépôt Git privé, et chaque responsabilité correspond à un fichier principal, ce qui limite les conflits entre membres. Les tests automatisés jouent le rôle de garde-fou commun~: une modification qui casse une propriété du modèle est détectée avant d'être intégrée.

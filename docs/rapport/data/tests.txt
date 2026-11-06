@@ -1,0 +1,24 @@
+  test_websocket_etat_et_commandes
+  test_api_historique_et_export
+  test_debit_regime_egal_au_debit_theorique[initial-4.0]
+  test_debit_regime_egal_au_debit_theorique[controle_auto-7.5]
+  test_debit_regime_egal_au_debit_theorique[double_controle-7.5]
+  test_debit_theorique_calcule
+  test_conservation_des_produits[initial]
+  test_conservation_des_produits[controle_auto]
+  test_conservation_des_produits[double_controle]
+  test_conservation_des_produits[convoyeur_adaptatif]
+  test_files_ne_depassent_pas_la_capacite[initial]
+  test_files_ne_depassent_pas_la_capacite[controle_auto]
+  test_files_ne_depassent_pas_la_capacite[double_controle]
+  test_files_ne_depassent_pas_la_capacite[convoyeur_adaptatif]
+  test_utilisation_et_disponibilite_bornees
+  test_pannes_reduisent_disponibilite_et_debit
+  test_panne_provoquee_arrete_le_poste
+  test_rejets_proches_du_taux_parametre
+  test_goulot_identifie_et_deplace
+  test_convoyeur_adaptatif_reduit_en_cours_sans_perte_de_debit
+  test_comparaison_reproductible
+  test_changement_de_machines_en_cours_de_route
+  test_stockage_historique_et_export_csv
+23 passed, 1 warning in 2.11s

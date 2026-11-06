@@ -1,0 +1,52 @@
+\chapter{Protocole d'échange}
+\label{ann:protocole}
+
+\section{Commandes WebSocket (navigateur $\rightarrow$ backend)}
+
+\begin{table}[H]
+\centering
+\caption{Commandes acceptées sur \code{/ws}.}
+\label{tab:commandes}
+\small
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+\textbf{Action} & \textbf{Message} \\
+\midrule
+Appliquer un scénario & \code{\{"cmd":"preset","name":"controle\_auto"\}} \\
+Temps de cycle d'un poste & \code{\{"cmd":"set\_time","station":2,"value":8\}} (1 à 60~s) \\
+Machines en parallèle & \code{\{"cmd":"set\_servers","station":2,"value":2\}} (1 à 3) \\
+Convoyeur adaptatif & \code{\{"cmd":"adaptive","value":true\}} \\
+Pannes aléatoires & \code{\{"cmd":"failures","value":false\}} \\
+Provoquer / réparer & \code{\{"cmd":"break","station":1\}}, \code{\{"cmd":"repair","station":1\}} \\
+Vitesse, pause, remise à zéro & \code{\{"cmd":"speed","value":10\}}, \code{\{"cmd":"pause","value":true\}}, \code{\{"cmd":"reset"\}} \\
+Comparer les scénarios & \code{\{"cmd":"compare","duration":3600\}} $\rightarrow$ réponse \code{compare} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Messages backend $\rightarrow$ navigateur}
+
+\begin{itemize}
+  \item \code{hello} (à la connexion)~: liste des postes et des scénarios disponibles.
+  \item \code{state} (10~Hz)~: \code{config}, \code{stations} (état, file, utilisation, disponibilité, attente, \ac{MTBF}/\ac{MTTR} observés, machines), \code{products} (poste, position \code{q}/\code{p}/\code{t}, progression), \code{kpi}, \code{history} (3~dernières minutes), \code{events}, \code{exits} (produits sortis ou rejetés depuis le message précédent).
+  \item \code{compare}~: \code{status} (\code{running} puis \code{done}) et résultats par scénario.
+  \item \code{error}~: commande invalide.
+\end{itemize}
+
+\section{Points d'accès REST}
+
+\begin{table}[H]
+\centering
+\caption{\ac{API} \ac{REST} de l'historique.}
+\label{tab:rest}
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+\textbf{Route} & \textbf{Réponse} \\
+\midrule
+\code{GET /api/state} & Instantané de l'état courant (\ac{JSON}) \\
+\code{GET /api/runs} & Liste des exécutions avec nombre de relevés et production \\
+\code{GET /api/history?run=N} & Relevés par minute et événements de l'exécution \code{N} \\
+\code{GET /api/export.csv[?run=N]} & Export \ac{CSV} (séparateur \code{;}) d'une exécution ou de tout l'historique \\
+\bottomrule
+\end{tabularx}
+\end{table}

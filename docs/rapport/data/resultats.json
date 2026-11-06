@@ -1,0 +1,342 @@
+{
+ "avec_pannes": [
+  {
+   "key": "initial",
+   "label": "Situation initiale",
+   "config": {
+    "times": [
+     5.0,
+     8.0,
+     15.0,
+     7.0
+    ],
+    "servers": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "adaptive": false,
+    "failures": true
+   },
+   "t": 3600.0,
+   "produced": 218,
+   "rejected": 12,
+   "reject_pct": 5.2,
+   "throughput_now": 4.0,
+   "throughput_avg": 3.63,
+   "theoretical": 4.0,
+   "theoretical_hour": 240,
+   "wip": 19,
+   "avg_wip": 19.02,
+   "lead_time": 286.2,
+   "wait_controle": 114.8,
+   "bottleneck_theoretical": "Contrôle qualité",
+   "bottleneck_observed": "Contrôle qualité",
+   "downtime_total": 589.0,
+   "failures": 25,
+   "util": [
+    0.346,
+    0.533,
+    0.961,
+    0.424
+   ]
+  },
+  {
+   "key": "controle_auto",
+   "label": "Contrôle automatisé (8 s)",
+   "config": {
+    "times": [
+     5.0,
+     8.0,
+     8.0,
+     7.0
+    ],
+    "servers": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "adaptive": false,
+    "failures": true
+   },
+   "t": 3600.0,
+   "produced": 390,
+   "rejected": 23,
+   "reject_pct": 5.6,
+   "throughput_now": 7.0,
+   "throughput_avg": 6.5,
+   "theoretical": 7.5,
+   "theoretical_hour": 450,
+   "wip": 20,
+   "avg_wip": 13.4,
+   "lead_time": 113.1,
+   "wait_controle": 9.1,
+   "bottleneck_theoretical": "Traitement",
+   "bottleneck_observed": "Traitement",
+   "downtime_total": 634.9,
+   "failures": 28,
+   "util": [
+    0.601,
+    0.942,
+    0.922,
+    0.76
+   ]
+  },
+  {
+   "key": "double_controle",
+   "label": "2 postes de contrôle",
+   "config": {
+    "times": [
+     5.0,
+     8.0,
+     15.0,
+     7.0
+    ],
+    "servers": [
+     1,
+     1,
+     2,
+     1
+    ],
+    "adaptive": false,
+    "failures": true
+   },
+   "t": 3600.0,
+   "produced": 389,
+   "rejected": 23,
+   "reject_pct": 5.6,
+   "throughput_now": 8.0,
+   "throughput_avg": 6.48,
+   "theoretical": 7.5,
+   "theoretical_hour": 450,
+   "wip": 14,
+   "avg_wip": 14.93,
+   "lead_time": 129.3,
+   "wait_controle": 15.9,
+   "bottleneck_theoretical": "Traitement",
+   "bottleneck_observed": "Traitement",
+   "downtime_total": 711.9,
+   "failures": 29,
+   "util": [
+    0.592,
+    0.927,
+    0.863,
+    0.758
+   ]
+  },
+  {
+   "key": "convoyeur_adaptatif",
+   "label": "Convoyeur adaptatif",
+   "config": {
+    "times": [
+     5.0,
+     8.0,
+     15.0,
+     7.0
+    ],
+    "servers": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "adaptive": true,
+    "failures": true
+   },
+   "t": 3600.0,
+   "produced": 218,
+   "rejected": 12,
+   "reject_pct": 5.2,
+   "throughput_now": 4.0,
+   "throughput_avg": 3.63,
+   "theoretical": 4.0,
+   "theoretical_hour": 240,
+   "wip": 9,
+   "avg_wip": 9.37,
+   "lead_time": 144.6,
+   "wait_controle": 40.5,
+   "bottleneck_theoretical": "Contrôle qualité",
+   "bottleneck_observed": "Contrôle qualité",
+   "downtime_total": 589.0,
+   "failures": 25,
+   "util": [
+    0.332,
+    0.522,
+    0.961,
+    0.424
+   ]
+  }
+ ],
+ "sans_pannes": [
+  {
+   "key": "initial",
+   "label": "Situation initiale",
+   "config": {
+    "times": [
+     5.0,
+     8.0,
+     15.0,
+     7.0
+    ],
+    "servers": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "adaptive": false,
+    "failures": false
+   },
+   "t": 3600.0,
+   "produced": 226,
+   "rejected": 12,
+   "reject_pct": 5.0,
+   "throughput_now": 4.0,
+   "throughput_avg": 3.77,
+   "theoretical": 4.0,
+   "theoretical_hour": 240,
+   "wip": 19,
+   "avg_wip": 19.24,
+   "lead_time": 280.2,
+   "wait_controle": 113.6,
+   "bottleneck_theoretical": "Contrôle qualité",
+   "bottleneck_observed": "Contrôle qualité",
+   "downtime_total": 0.0,
+   "failures": 0,
+   "util": [
+    0.357,
+    0.551,
+    0.995,
+    0.439
+   ]
+  },
+  {
+   "key": "controle_auto",
+   "label": "Contrôle automatisé (8 s)",
+   "config": {
+    "times": [
+     5.0,
+     8.0,
+     8.0,
+     7.0
+    ],
+    "servers": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "adaptive": false,
+    "failures": false
+   },
+   "t": 3600.0,
+   "produced": 422,
+   "rejected": 24,
+   "reject_pct": 5.4,
+   "throughput_now": 6.0,
+   "throughput_avg": 7.03,
+   "theoretical": 7.5,
+   "theoretical_hour": 450,
+   "wip": 13,
+   "avg_wip": 12.14,
+   "lead_time": 97.1,
+   "wait_controle": 0.0,
+   "bottleneck_theoretical": "Traitement",
+   "bottleneck_observed": "Traitement",
+   "downtime_total": 0.0,
+   "failures": 0,
+   "util": [
+    0.636,
+    0.998,
+    0.995,
+    0.822
+   ]
+  },
+  {
+   "key": "double_controle",
+   "label": "2 postes de contrôle",
+   "config": {
+    "times": [
+     5.0,
+     8.0,
+     15.0,
+     7.0
+    ],
+    "servers": [
+     1,
+     1,
+     2,
+     1
+    ],
+    "adaptive": false,
+    "failures": false
+   },
+   "t": 3600.0,
+   "produced": 421,
+   "rejected": 24,
+   "reject_pct": 5.4,
+   "throughput_now": 6.0,
+   "throughput_avg": 7.02,
+   "theoretical": 7.5,
+   "theoretical_hour": 450,
+   "wip": 14,
+   "avg_wip": 13.01,
+   "lead_time": 104.1,
+   "wait_controle": 0.0,
+   "bottleneck_theoretical": "Traitement",
+   "bottleneck_observed": "Traitement",
+   "downtime_total": 0.0,
+   "failures": 0,
+   "util": [
+    0.636,
+    0.998,
+    0.932,
+    0.82
+   ]
+  },
+  {
+   "key": "convoyeur_adaptatif",
+   "label": "Convoyeur adaptatif",
+   "config": {
+    "times": [
+     5.0,
+     8.0,
+     15.0,
+     7.0
+    ],
+    "servers": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "adaptive": true,
+    "failures": false
+   },
+   "t": 3600.0,
+   "produced": 226,
+   "rejected": 12,
+   "reject_pct": 5.0,
+   "throughput_now": 4.0,
+   "throughput_avg": 3.77,
+   "theoretical": 4.0,
+   "theoretical_hour": 240,
+   "wip": 9,
+   "avg_wip": 9.5,
+   "lead_time": 141.5,
+   "wait_controle": 40.4,
+   "bottleneck_theoretical": "Contrôle qualité",
+   "bottleneck_observed": "Contrôle qualité",
+   "downtime_total": 0.0,
+   "failures": 0,
+   "util": [
+    0.343,
+    0.54,
+    0.995,
+    0.439
+   ]
+  }
+ ]
+}

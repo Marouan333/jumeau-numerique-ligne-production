@@ -1,0 +1,62 @@
+\chapter{Planning et ressources}
+\label{ann:planning}
+
+\section{Planning par phases}
+
+\begin{table}[H]
+\centering
+\caption{Phases du projet et responsables (planning prévisionnel en semaines).}
+\label{tab:planning}
+\small
+\begin{tabularx}{\textwidth}{@{}c X l *{7}{c}@{}}
+\toprule
+\textbf{Ph.} & \textbf{Travail} & \textbf{Responsable(s)} & \textbf{S1} & \textbf{S2} & \textbf{S3} & \textbf{S4} & \textbf{S5} & \textbf{S6} & \textbf{S7} \\
+\midrule
+1 & Analyse du besoin, conception, protocole & Tous & \cellcolor{ensambleu} & & & & & & \\
+2 & Modélisation et animation 3D & Issami, Ezbakhe & & \cellcolor{ensambleu} & \cellcolor{ensambleu} & & & & \\
+3 & Simulation industrielle & Benzahra & & \cellcolor{ensambleu} & \cellcolor{ensambleu} & & & & \\
+4 & Backend, communication, stockage & Hsain & & & \cellcolor{ensambleu} & \cellcolor{ensambleu} & & & \\
+5 & Dashboard et indicateurs & Kichchou & & & & \cellcolor{ensambleu} & \cellcolor{ensambleu} & & \\
+6 & Optimisation, tests, validation & Hamdouch & & & & & \cellcolor{ensambleu} & \cellcolor{ensambleu} & \\
+7 & Rapport et présentation & Tous & & & & & & \cellcolor{ensambleu} & \cellcolor{ensambleu} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Ressources}
+
+\begin{table}[H]
+\centering
+\caption{Ressources nécessaires.}
+\label{tab:ressources}
+\begin{tabularx}{\textwidth}{@{}l X r@{}}
+\toprule
+\textbf{Type} & \textbf{Ressource} & \textbf{Coût} \\
+\midrule
+Matériel & Ordinateurs personnels de l'équipe, navigateur récent compatible WebGL & 0 \\
+Logiciels & Python 3.12, FastAPI, Uvicorn, pytest, SQLite, Three.js (open source) & 0 \\
+Collaboration & Dépôt Git privé (GitHub), éditeurs de code & 0 \\
+Documentation & \LaTeX{} (tectonic) pour le rapport, HTML pour la présentation & 0 \\
+\midrule
+\textbf{Total} & & \textbf{0~MAD} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Critères d'évaluation}
+
+\begin{table}[H]
+\centering
+\caption{Critères du cahier des charges et éléments de preuve.}
+\label{tab:criteres}
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+\textbf{Critère} & \textbf{Élément de preuve} \\
+\midrule
+Atteinte des objectifs fixés & Les trois livrables sont réalisés (tableau~\ref{tab:bilan}) \\
+Respect des délais et du budget & Planning par phases, aucun coût (tableau~\ref{tab:ressources}) \\
+Qualité de la réalisation technique & 23 tests automatisés, loi de Little vérifiée, architecture découplée \\
+Facilité d'utilisation pour les opérateurs & Scène 3D, voyants d'état, onglet Aide, manuel utilisateur \\
+\bottomrule
+\end{tabularx}
+\end{table}

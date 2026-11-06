@@ -1,0 +1,82 @@
+% ============================================================================
+% Chapitre 1 --- Contexte et objectifs
+% ============================================================================
+\chapter{Contexte et objectifs du projet}
+\label{chap:contexte}
+
+\section{L'Industrie 4.0 en quelques mots}
+
+Le terme \textit{Industrie~4.0} désigne la quatrième révolution industrielle, après la mécanisation (vapeur), la production de masse (électricité) et l'automatisation (électronique et informatique). Formalisée en Allemagne au début des années~2010~\cite{kagermann2013}, elle repose sur l'interconnexion des équipements de production, des systèmes d'information et des personnes~: les machines communiquent leur état, les données sont collectées et analysées en continu, et les décisions de pilotage s'appuient sur ces données plutôt que sur l'observation ponctuelle.
+
+Parmi les technologies associées --- capteurs et objets connectés (\ac{IoT}), informatique en nuage, intelligence artificielle, réalité augmentée, robotique collaborative --- le \textbf{jumeau numérique} occupe une place centrale~\cite{tao2019}, parce qu'il relie toutes les autres~: il est la représentation numérique vivante de l'installation, sur laquelle on peut observer, analyser et expérimenter.
+
+\section{Le jumeau numérique}
+
+Le concept a été formulé par Michael Grieves au début des années~2000 dans le contexte de la gestion du cycle de vie des produits~\cite{grieves2014}~: un objet physique, son double virtuel, et le flux de données qui les relie. La littérature distingue trois niveaux d'intégration selon la nature de ce flux~\cite{kritzinger2018}~:
+
+\begin{table}[H]
+\centering
+\caption{Les trois niveaux d'intégration selon Kritzinger et al.}
+\label{tab:niveaux}
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+\textbf{Niveau} & \textbf{Physique $\rightarrow$ numérique} & \textbf{Numérique $\rightarrow$ physique} \\
+\midrule
+Modèle numérique & Manuel & Manuel \\
+Ombre numérique (\textit{digital shadow}) & Automatique & Manuel \\
+Jumeau numérique (\textit{digital twin}) & Automatique & Automatique \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Dans un contexte académique sans équipement physique, le système physique est lui-même remplacé par une simulation. Notre projet se situe donc à l'interface entre ces niveaux~: la \enquote{ligne} est un modèle de simulation qui joue le rôle du système réel et produit des données en continu, et le jumeau (scène \ac{3D} et tableau de bord) se synchronise automatiquement sur ces données et peut renvoyer des commandes (changement de réglage, panne provoquée, réparation) qui modifient le comportement de la ligne. C'est précisément ce que demande le livrable \enquote{interface synchronisée avec des données simulées}. La norme ISO~23247~\cite{iso23247} décrit un cadre de référence pour ces jumeaux numériques de fabrication, dont notre architecture reprend la séparation entre entité observée, collecte des données et applications utilisatrices.
+
+\section{Périmètre du projet}
+
+\begin{table}[H]
+\centering
+\caption{Périmètre du projet.}
+\label{tab:perimetre}
+\begin{tabularx}{\textwidth}{@{}X X@{}}
+\toprule
+\textbf{Inclus} & \textbf{Exclu} \\
+\midrule
+Ligne de 4 postes en série, convoyeur, files d'attente de capacité limitée & Connexion à des automates (\ac{PLC}) ou capteurs réels \\
+Pannes aléatoires et provoquées, rejets au contrôle qualité & Maintenance prédictive par apprentissage automatique \\
+Visualisation \ac{3D} animée et tableau de bord synchronisés & Gestion des stocks, de la planification et des commandes (\ac{ERP}, \ac{MES}) \\
+Historique de production et export des données & Déploiement en production, authentification des utilisateurs \\
+Scénarios d'optimisation comparés dans des conditions identiques & Optimisation économique (coûts, investissements) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{La ligne étudiée}
+
+La ligne comprend quatre postes successifs~: \textbf{alimentation}, \textbf{traitement}, \textbf{contrôle qualité} et \textbf{emballage}. Les produits circulent sur un convoyeur et passent par chaque poste. Les temps de traitement de départ sont ceux de l'énoncé du scénario~:
+
+\begin{table}[H]
+\centering
+\caption{Paramètres initiaux de la ligne.}
+\label{tab:parametres}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Poste} & \textbf{Temps de traitement} & \textbf{Cadence maximale isolée} \\
+\midrule
+Alimentation & 5~s & 12 produits/min \\
+Traitement & 8~s & 7{,}5 produits/min \\
+Contrôle qualité & 15~s & \textbf{4 produits/min} \\
+Emballage & 7~s & 8{,}6 produits/min \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Dans une ligne en série, le débit est limité par le poste le plus lent~: c'est le \textbf{goulot d'étranglement}, au sens de la théorie des contraintes~\cite{goldratt1984}. Ici, le contrôle qualité (15~s) borne la ligne à 4~produits/min, soit 240 produits/h, alors que les autres postes pourraient aller plus vite. Les produits s'accumulent devant lui et les postes amont finissent par se bloquer.
+
+\section{Objectifs}
+
+\begin{enumerate}
+  \item \textbf{Modéliser} la ligne de façon suffisamment fidèle pour reproduire les phénomènes qui comptent pour la décision~: goulot, accumulation, blocage de l'amont, effet des pannes et des rejets.
+  \item \textbf{Superviser} la ligne en temps réel dans une interface \ac{3D} et un tableau de bord qui affichent les mêmes données au même instant.
+  \item \textbf{Optimiser}~: identifier le goulot, tester plusieurs solutions et mesurer leur effet sur le débit, l'attente et l'en-cours, dans des conditions comparables.
+  \item \textbf{Valider} le modèle par des tests automatisés plutôt que par la seule observation visuelle.
+\end{enumerate}

@@ -1,0 +1,92 @@
+% ============================================================================
+% Chapitre 2 --- Spécifications fonctionnelles et techniques
+% ============================================================================
+\chapter{Spécifications fonctionnelles et techniques}
+\label{chap:specs}
+
+\section{Spécifications fonctionnelles}
+
+Le cahier des charges propose une liste de fonctionnalités possibles. Le tableau~\ref{tab:fonctionnel} indique comment chacune est couverte par le projet.
+
+\begin{table}[H]
+\centering
+\caption{Couverture des fonctionnalités du cahier des charges.}
+\label{tab:fonctionnel}
+\begin{tabularx}{\textwidth}{@{}p{4.2cm} X c@{}}
+\toprule
+\textbf{Fonctionnalité} & \textbf{Réalisation dans le projet} & \textbf{Statut} \\
+\midrule
+Automatisation des processus & Enchaînement automatique des postes, transfert par convoyeur, blocage et reprise sans intervention & Réalisé \\
+Collecte et analyse de données en temps réel & État complet diffusé 10~fois/s, \ac{KPI} calculés en continu, historique SQLite par minute simulée & Réalisé \\
+Interconnexion des équipements et systèmes & Simulation, backend, scène \ac{3D} et tableau de bord reliés par un protocole \ac{WS} unique & Réalisé \\
+Interface homme-machine intuitive & Scène \ac{3D} navigable, voyants d'état, tableau de bord, onglet d'aide, manuel utilisateur & Réalisé \\
+Maintenance prédictive & Pannes simulées, \ac{MTBF} et \ac{MTTR} observés par poste~; pas de modèle prédictif & Partiel \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Les fonctions détaillées attendues par l'utilisateur sont les suivantes~:
+
+\begin{itemize}
+  \item \textbf{F1 --- Visualiser} la ligne en \ac{3D}~: machines, convoyeur, produits en mouvement, état de chaque machine (en marche, en attente, bloquée, en panne), avancement du produit en cours.
+  \item \textbf{F2 --- Superviser}~: cadence réelle et théorique, produits finis, rejets, en-cours, goulot, état et statistiques de chaque poste.
+  \item \textbf{F3 --- Piloter}~: pause, vitesse de simulation ($\times$1 à $\times$20), remise à zéro, modification des temps de cycle, nombre de machines en parallèle, convoyeur adaptatif, activation des pannes.
+  \item \textbf{F4 --- Simuler des incidents}~: provoquer ou réparer une panne sur un poste choisi.
+  \item \textbf{F5 --- Comparer}~: simuler une heure de chaque scénario dans des conditions identiques et afficher les écarts par rapport à la situation initiale.
+  \item \textbf{F6 --- Historiser}~: conserver chaque exécution, consulter ses courbes et événements, exporter les données en \ac{CSV}.
+\end{itemize}
+
+\section{Spécifications techniques}
+
+\subsection{Technologies retenues}
+
+\begin{table}[H]
+\centering
+\caption{Choix technologiques.}
+\label{tab:techno}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{Brique} & \textbf{Technologie} & \textbf{Justification} \\
+\midrule
+Simulation & Python 3.12 & Langage maîtrisé par toute l'équipe, lisible pour un modèle métier, sans dépendance \\
+Backend & FastAPI + Uvicorn~\cite{fastapi} & Serveur asynchrone léger qui gère à la fois \ac{WS} et \ac{REST} \\
+Communication & WebSocket~\cite{rfc6455} & Canal bidirectionnel persistant et à faible latence~: l'état descend, les commandes remontent \\
+Stockage & SQLite & Base \ac{SQL} embarquée dans la bibliothèque standard, un seul fichier, aucun serveur \\
+\ac{3D} & Three.js r160~\cite{threejs} & Rendu WebGL dans le navigateur, aucune installation côté poste opérateur \\
+Tableau de bord & HTML, CSS, JavaScript & Même page que la \ac{3D}, donc même flux de données et synchronisation immédiate \\
+Validation & pytest & Tests automatisés reproductibles du modèle et de l'\ac{API} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{callout}
+\textbf{Pourquoi Three.js plutôt que Unity~?} La répartition initiale des tâches prévoyait Unity. Nous avons basculé vers Three.js pour une raison d'architecture~: avec Unity, la scène \ac{3D} et le tableau de bord seraient deux applications distinctes, reliées à Python par un pont réseau supplémentaire. Avec Three.js, la \ac{3D} et le tableau de bord vivent dans la même page web et lisent le même message \ac{WS}~; la synchronisation demandée par le livrable est alors garantie par construction. La démonstration se fait dans un simple navigateur. La contrepartie est un rendu moins réaliste qu'un moteur de jeu, suffisant pour comprendre le fonctionnement de la ligne.
+\end{callout}
+
+\subsection{Normes et standards}
+
+Le projet s'appuie sur des standards ouverts~: le protocole WebSocket (RFC~6455~\cite{rfc6455}) pour la communication, \ac{JSON} pour le format des messages, HTTP/\ac{REST} pour l'historique, \ac{CSV} pour l'export. Dans une version industrielle, la collecte des données machines passerait par \ac{OPC} (IEC~62541~\cite{opcua}), standard de fait de l'interopérabilité industrielle~; l'architecture actuelle isole la source de données dans un seul module (\code{sim.py}) précisément pour permettre ce remplacement.
+
+\subsection{Sécurité et cybersécurité}
+
+Le serveur écoute uniquement sur l'interface locale (\code{127.0.0.1})~: il n'est pas exposé au réseau. Les commandes reçues sont validées et bornées côté serveur (numéro de poste, temps de cycle entre 1 et 60~s, 1 à 3 machines, vitesse entre $\times$0{,}25 et $\times$20)~; une commande invalide renvoie un message d'erreur sans modifier l'état. Aucune donnée personnelle n'est traitée. Une mise en réseau réelle demanderait en plus une authentification des opérateurs, un chiffrement (\code{wss://}) et des droits différenciés entre consultation et pilotage~; ces points sont listés dans les perspectives.
+
+\subsection{Performances attendues}
+
+\begin{table}[H]
+\centering
+\caption{Exigences de performance et valeurs obtenues.}
+\label{tab:perf}
+\begin{tabularx}{\textwidth}{@{}X l l@{}}
+\toprule
+\textbf{Exigence} & \textbf{Cible} & \textbf{Obtenu} \\
+\midrule
+Fréquence de mise à jour de l'interface & $\geq$ 5~Hz & 10~Hz \\
+Pas de simulation & $\leq$ 0{,}1~s & 0{,}05~s \\
+Taille d'un message d'état & $<$ 10~ko & $\approx$ 3~ko \\
+Comparaison de 5 scénarios sur 1~h simulée & $<$ 5~s & $\approx$ 0{,}3~s \\
+Écart débit simulé / débit théorique en régime & $\leq$ 5~\% & vérifié par test \\
+Rendu \ac{3D} & fluide & $\approx$ 30~images/s (navigateur sans affichage) \\
+\bottomrule
+\end{tabularx}
+\end{table}

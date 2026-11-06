@@ -1,0 +1,59 @@
+% ============================================================================
+% Rapport de mini-projet --- Industrie 4.0
+% « Jumeau numérique d'une ligne de production »
+% Auteurs    : A. Issami, M. Ezbakhe, H. Benzahra, Z. Hsain, H. Kichchou, M. Hamdouch
+% Encadrante : Prof. Maria Zemzami (ENSAM Rabat)
+% ENSAM Rabat --- Filière INDIA&SD --- Année Universitaire 2026/2027
+% Compilation : make   (ou : tectonic rapport.tex)
+% ============================================================================
+
+\documentclass[12pt,a4paper,openany]{report}
+
+\input{preamble.tex}
+
+\begin{document}
+
+\input{titlepage.tex}
+
+\pagenumbering{roman}
+
+\input{frontmatter/remerciements.tex}
+\clearpage
+\input{frontmatter/resume.tex}
+\clearpage
+
+\renewcommand{\contentsname}{Table des matières}
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+\input{frontmatter/acronymes.tex}
+\clearpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{chapters/00_introduction.tex}
+\input{chapters/01_contexte.tex}
+\input{chapters/02_specifications.tex}
+\input{chapters/03_conception.tex}
+\input{chapters/04_implementation.tex}
+\input{chapters/05_optimisation.tex}
+\input{chapters/06_organisation.tex}
+\input{chapters/07_conclusion.tex}
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliographie et webographie}
+\renewcommand{\bibname}{Bibliographie et webographie}
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\appendix
+\input{annexes/a_planning.tex}
+\input{annexes/b_tests.tex}
+\input{annexes/c_protocole.tex}
+
+\end{document}
