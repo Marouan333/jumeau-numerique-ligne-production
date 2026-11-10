@@ -9,6 +9,7 @@ import json
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response
@@ -23,12 +24,15 @@ DB_PATH = os.environ.get("DB_PATH", str(ROOT / "data" / "jumeau.db"))
 TICK = 0.1           # période d'envoi au navigateur (s réelles)
 SUBSTEP = 0.05       # pas de simulation (s simulées)
 SAMPLE_EVERY = 60.0  # relevé des KPI dans l'historique (s simulées)
+# Graine aléatoire facultative (SIM_SEED=7) : rend les pannes et les rejets reproductibles,
+# par exemple pour mesurer les scénarios avec la scène Unity (voir docs/resultats-unity.md).
+SEED = int(os.environ["SIM_SEED"]) if os.environ.get("SIM_SEED") else None
 
 
 class Hub:
     def __init__(self, storage: Storage):
         self.storage = storage
-        self.sim = Sim()
+        self.sim = Sim(seed=SEED)
         self.sim.track_exits = True
         self.sim.on_event = self._log_event
         self.speed = 4.0
@@ -80,6 +84,23 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Jumeau numérique – ligne de production", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def unity_webgl_headers(request, call_next):
+    """Les fichiers .unityweb du build WebGL sont gzippés : on l'annonce pour que le navigateur les
+    décompresse lui-même (démarrage plus rapide) et on donne le bon type MIME."""
+    response = await call_next(request)
+    path = request.url.path
+    if path.endswith(".unityweb"):
+        response.headers["Content-Encoding"] = "gzip"
+        if ".wasm." in path:
+            response.headers["Content-Type"] = "application/wasm"
+        elif ".js." in path:
+            response.headers["Content-Type"] = "application/javascript"
+        else:
+            response.headers["Content-Type"] = "application/octet-stream"
+    return response
 
 
 def _station(m: dict) -> int:
@@ -173,7 +194,7 @@ def api_history(run: int):
 
 
 @app.get("/api/export.csv")
-def api_export(run: int | None = None):
+def api_export(run: Optional[int] = None):
     name = f"historique_run{run}.csv" if run else "historique_complet.csv"
     return Response("﻿" + hub.storage.export_csv(run), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})

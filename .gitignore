@@ -15,3 +15,33 @@ __pycache__/
 *.bbl
 *.blg
 *.synctex.gz
+
+# Unity (projet dans unity/)
+unity/[Ll]ibrary/
+unity/[Tt]emp/
+unity/[Oo]bj/
+unity/[Bb]uild/
+unity/[Bb]uilds/
+unity/[Ll]ogs/
+unity/[Uu]ser[Ss]ettings/
+unity/.vs/
+unity/.vscode/
+unity/*.csproj
+unity/*.sln
+unity/*.slnx
+unity/*.user
+unity/*.pidb.meta
+unity/*.pdb.meta
+unity/*.mdb.meta
+unity/.utmp/
+unity/MemoryCaptures/
+unity/Recordings/
+unity/*.apk
+unity/*.aab
+unity/*.unitypackage
+unity/crashlytics-build.properties
+unity/sysinfo.txt
+
+# Build WebGL genere par Unity (menu Twin > Construire WebGL), a regenerer
+frontend/unity/
+unity/Data/

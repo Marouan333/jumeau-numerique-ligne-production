@@ -1,5 +1,5 @@
 // Dashboard + liaison WebSocket avec le backend Python.
-import { LineScene, STATE_COLORS } from './scene.js';
+// La scène 3D est un build Unity WebGL qui lit le même flux WebSocket que ce tableau de bord.
 
 const $ = (id) => document.getElementById(id);
 const STATE_TXT = { marche: 'Marche', attente: 'Attente', bloque: 'Bloqué', panne: 'Panne' };
@@ -12,7 +12,41 @@ let selected = 2;
 let compareRows = null;
 let editing = null; // slider en cours de manipulation
 
-const scene = new LineScene($('viewport'), { onSelect: (i) => select(i, true) });
+// ------------------------------------------------------------- scène Unity
+let unity = null;
+const scene = {
+  focus: (i) => unity && unity.SendMessage('LineBridge', 'FocusStation', String(i)),
+  resetView: () => unity && unity.SendMessage('LineBridge', 'ResetView', ''),
+};
+// appelé par Unity (WsBridge.jslib) quand on clique sur une machine
+window.twinOnStationSelected = (i) => select(i, false);
+
+function loadUnity() {
+  const base = 'unity/Build/unity';
+  const loading = $('unity-loading');
+  const script = document.createElement('script');
+  script.src = `${base}.loader.js`;
+  script.onload = () => {
+    createUnityInstance($('unity-canvas'), {
+      // l'extension .unityweb est celle que Unity 6 utilise quand « Decompression Fallback » est activé
+      dataUrl: `${base}.data.unityweb`,
+      frameworkUrl: `${base}.framework.js.unityweb`,
+      codeUrl: `${base}.wasm.unityweb`,
+      streamingAssetsUrl: 'StreamingAssets',
+      companyName: 'ENSAM Rabat',
+      productName: 'JumeauNumerique',
+      productVersion: '1.0',
+      matchWebGLToCanvasSize: true,
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+    }, (p) => { loading.textContent = `Chargement de la scène 3D… ${Math.round(p * 100)} %`; })
+      .then((instance) => { unity = instance; loading.hidden = true; })
+      .catch((err) => { loading.textContent = `Scène 3D indisponible : ${err}`; });
+  };
+  script.onerror = () => {
+    loading.textContent = 'Build Unity introuvable. Dans Unity : menu Twin > Construire WebGL (voir README).';
+  };
+  document.body.appendChild(script);
+}
 
 // ------------------------------------------------------------- WebSocket
 function connect() {
@@ -43,7 +77,6 @@ function onHello(m) {
 // ---------------------------------------------------------------- rendu
 function onState(m) {
   state = m;
-  scene.update(m);
   const k = m.kpi;
   $('clock').textContent = `t = ${formatTime(k.t)}`;
   $('pause').textContent = m.paused ? '▶ Reprendre' : '⏸ Pause';
@@ -200,7 +233,7 @@ function exportCsv() {
 // ------------------------------------------------------------ contrôles
 $('pause').onclick = () => send('pause', { value: !state?.paused });
 $('reset').onclick = () => send('reset');
-$('view').onclick = () => { scene._userMoved = false; scene.resetView(); };
+$('view').onclick = () => scene.resetView();
 $('speed').onclick = (e) => e.target.dataset.v && send('speed', { value: Number(e.target.dataset.v) });
 $('presets').onclick = (e) => e.target.dataset.k && send('preset', { name: e.target.dataset.k });
 $('srv-ctrl').onclick = (e) => e.target.dataset.v && send('set_servers', { station: 2, value: Number(e.target.dataset.v) });
@@ -313,3 +346,4 @@ $('run-select').onchange = (e) => loadHistory(Number(e.target.value));
 $('run-refresh').onclick = loadRuns;
 
 connect();
+loadUnity();

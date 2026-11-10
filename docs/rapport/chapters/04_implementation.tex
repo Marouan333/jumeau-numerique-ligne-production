@@ -11,14 +11,21 @@ backend/   sim.py        modèle de la ligne et KPI
            server.py     FastAPI : WebSocket /ws, REST /api/*
            storage.py    historique SQLite
 frontend/  index.html, style.css
-           js/scene.js   scène 3D Three.js
            js/app.js     tableau de bord, historique, commandes
+           unity/        build WebGL (généré, non versionné)
+unity/     projet Unity 6 (URP)
+           Assets/Scripts/Net      client WebSocket, DTO du protocole
+           Assets/Scripts/Scene    ligne, machines, caméra, étiquettes
+           Assets/Scripts/Bench    banc d'essai des scénarios
+           Assets/Editor           construction de la scène, build WebGL
 tests/     test_sim.py   cohérence du modèle (21 tests)
            test_api.py   WebSocket et REST (2 tests)
-docs/      rapport/, presentation/, repartition/, manuel-utilisateur.md
+tools/     resultats_vers_markdown.py   résultats du banc d'essai
+docs/      rapport/, presentation/, repartition/, cahier-des-charges.md,
+           protocole-websocket.md, resultats-unity.md, manuel-utilisateur.md
 \end{lstlisting}
 
-L'application se lance par une seule commande (\code{python backend/server.py}) puis s'ouvre à l'adresse \code{http://localhost:8000}. Le backend sert aussi les fichiers de l'interface~: aucun serveur web séparé n'est nécessaire.
+L'application se lance par une seule commande (\code{python backend/server.py}) puis s'ouvre à l'adresse \code{http://localhost:8000}. Le backend sert aussi les fichiers de l'interface et le build Unity WebGL~: aucun serveur web séparé n'est nécessaire. Les fichiers du build sont compressés (\code{.unityweb}, gzip)~; un petit intergiciel du backend ajoute l'en-tête \code{Content-Encoding} et le type \textsc{mime} adapté pour que le navigateur les décompresse lui-même. Une variable d'environnement facultative, \code{SIM\_SEED}, fixe la graine aléatoire pour rendre les pannes reproductibles.
 
 \section{Le modèle de simulation (\code{sim.py})}
 
@@ -64,30 +71,56 @@ Le module \code{storage.py} enregistre l'historique dans trois tables SQLite~:
 \end{itemize}
 La comparaison de scénarios, plus coûteuse, est exécutée dans un fil séparé (\code{asyncio.\allowbreak to\_thread}) pour ne pas interrompre la diffusion temps réel.
 
-\section{La scène 3D (\code{scene.js})}
+\section{La scène 3D (Unity)}
 
-La scène est construite uniquement à partir de primitives Three.js (boîtes, cylindres, cônes)~: aucun modèle externe n'est chargé. Chaque poste a une silhouette propre --- trémie pour l'alimentation, broche rotative pour le traitement, caméra et faisceau de balayage pour le contrôle, presse et cartons pour l'emballage --- et porte un voyant aux couleurs des états de la figure~\ref{fig:etats} ainsi qu'une barre de progression. Quand un poste passe à plusieurs machines, la scène ajoute les machines en parallèle et un aiguillage du convoyeur.
+La scène est un projet \textbf{Unity~6} (pipeline URP, espace colorimétrique linéaire) construit uniquement à partir de primitives (boîtes, cylindres, sphères) et d'un maillage de trémie généré par code~: aucun modèle externe n'est importé. Un outil d'édition (menu \code{Twin > Construire la scène}) crée la scène, les matériaux et les textures de façon reproductible, ce qui évite de dépendre d'un fichier binaire modifié à la main. Chaque poste a une silhouette propre --- trémie pour l'alimentation, broche rotative pour le traitement, caméra et faisceau de balayage pour le contrôle, presse et carton pour l'emballage --- et porte un voyant aux couleurs des états de la figure~\ref{fig:etats}, une barre de progression et une étiquette flottante (nom, état, temps de cycle, file). Quand un poste passe à plusieurs machines, la scène ajoute les machines en parallèle et un aiguillage du convoyeur.
+
+\begin{table}[H]
+\centering
+\caption{Scripts C\# de la scène Unity.}
+\label{tab:scripts}
+\small
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+\textbf{Script} & \textbf{Rôle} \\
+\midrule
+\code{TwinClient}, \code{WsTransport} & Connexion WebSocket (natif dans l'éditeur, passerelle JavaScript en WebGL), décodage des messages, tampon d'états \\
+\code{LineController} & Applique l'état reçu~: machines, produits, palette, étiquettes de sortie \\
+\code{LineBuilder}, \code{StationUnit} & Construction et animation des machines (broche, faisceau, presse, voyant, barre) \\
+\code{OrbitCamera} & Caméra orbitale lissée, brouillard dépendant de la distance, retour à la vue globale \\
+\code{WorldLabel} & Étiquettes TextMeshPro orientées vers la caméra \\
+\code{LineBridge} & Pont page web $\leftrightarrow$ Unity (sélection d'une machine, vue globale) \\
+\code{ScenarioBenchmark} & Banc d'essai~: joue chaque scénario et exporte les mesures \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{images/screenshots/vue_globale.png}
-\caption{Vue d'ensemble~: ligne initiale après 9~minutes simulées. Les produits s'accumulent devant le contrôle qualité (file de 8), le traitement et l'alimentation sont bloqués~; le tableau de bord identifie le goulot.}
+\caption{Vue d'ensemble de la scène Unity (build WebGL, ligne initiale). Les produits s'accumulent devant le contrôle qualité, le traitement et l'alimentation sont bloqués en amont~; le bac rouge reçoit les rebuts, la palette les produits finis.}
 \label{fig:vue_globale}
 \end{figure}
 
-Les produits ne sont pas déplacés par la scène elle-même~: à chaque message, elle calcule la position cible de chaque produit (place dans la file, avancement dans la machine ou sur le convoyeur) et l'objet glisse vers cette cible par interpolation exponentielle à chaque image. La couleur indique le stade~: brun (brut), bleu (traité), vert (contrôlé)~; un produit emballé devient un carton qui rejoint la palette, un produit rejeté devient rouge et est projeté dans le bac à rebuts.
+\subsection{Fluidité}
+
+Les produits ne sont pas déplacés par un calcul propre à la scène~: le client conserve un tampon des derniers états reçus (10~Hz) et affiche la ligne \textbf{avec un léger retard de 0{,}15~s}, ce qui permet d'interpoler la position de chaque produit entre deux états consécutifs à la cadence de l'écran. Le mouvement reste ainsi continu même si un message arrive en retard. Les produits sont recyclés dans un \textit{pool} (aucune allocation par image), les machines et le décor n'ont pas de collider inutile et le matériel du convoyeur est animé par un décalage de texture. Dans le build WebGL, le premier chargement prend quelques secondes (environ 12~Mo compressés).
+
+\subsection{Difficultés rencontrées}
+
+Deux points techniques méritent d'être signalés. D'abord, dans un build WebGL réduit au minimum, les colliders de capsule, sphère et maillage sont supprimés~: créer une primitive par \code{GameObject.CreatePrimitive} à l'exécution produisait des erreurs dans la console du navigateur. Les formes créées pendant l'exécution partent donc de maillages partagés, sans collider~; seule la zone cliquable des quatre machines garde un \code{BoxCollider}. Ensuite, un brouillard trop dense voilait la scène dans une fenêtre étroite~: il est désormais calculé à partir de la distance de la caméra.
 
 \begin{figure}[H]
 \centering
 \begin{subfigure}[t]{0.49\textwidth}
-  \includegraphics[width=\textwidth]{images/screenshots/panne_traitement.png}
-  \caption{Panne provoquée sur le traitement~: voyant rouge, file amont pleine.}
+  \includegraphics[width=\textwidth]{images/screenshots/zoom_controle.png}
+  \caption{Zoom sur une machine~: étiquette d'état, voyant et barre de progression.}
 \end{subfigure}\hfill
 \begin{subfigure}[t]{0.49\textwidth}
-  \includegraphics[width=\textwidth]{images/screenshots/double_controle.png}
-  \caption{Scénario \enquote{2 postes de contrôle}~: deux machines en parallèle, file vide.}
+  \includegraphics[width=\textwidth]{images/screenshots/panne_traitement.png}
+  \caption{Panne provoquée sur le traitement~: voyant rouge, file amont pleine.}
 \end{subfigure}
-\caption{États visuels dans la scène 3D.}
+\caption{États visuels dans la scène Unity.}
 \label{fig:etats_3d}
 \end{figure}
 
@@ -115,7 +148,7 @@ Le panneau latéral comporte trois onglets. \textbf{Supervision} affiche les \ac
 
 \section{Validation du modèle}
 
-Mohamed \textsc{Hamdouch} étant responsable de la validation, le modèle est vérifié par \textbf{23 tests automatisés} (pytest), exécutés en environ 2~secondes. Ils ne vérifient pas que le code \enquote{tourne}, mais que la simulation respecte des propriétés connues d'une ligne de production~:
+Mohamed \textsc{Hamdouch} étant responsable de la validation, le modèle est vérifié par \textbf{23 tests automatisés} (pytest), exécutés en moins d'une minute. Ils ne vérifient pas que le code \enquote{tourne}, mais que la simulation respecte des propriétés connues d'une ligne de production~:
 
 \begin{table}[H]
 \centering

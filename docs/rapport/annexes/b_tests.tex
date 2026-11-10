@@ -1,7 +1,7 @@
 \chapter{Résultats des tests automatisés}
 \label{ann:tests}
 
-Sortie de \code{python -m pytest -rA} sur le dépôt (23 tests, tous réussis, environ 2~s).
+Sortie de \code{python -m pytest -rA} sur le dépôt (23 tests, tous réussis).
 
 \begin{lstlisting}[language={}, numbers=none, basicstyle=\ttfamily\scriptsize]
 tests/test_api.py::test_websocket_etat_et_commandes                         PASSED
@@ -32,11 +32,11 @@ tests/test_sim.py::test_stockage_historique_et_export_csv                   PASS
 
 \section*{Résultats sans pannes}
 
-Pour isoler l'effet des pannes, la comparaison a aussi été exécutée sans pannes (même graine)~:
+Pour isoler l'effet des pannes, la comparaison a aussi été mesurée sans pannes avec la scène Unity (même graine)~:
 
 \begin{table}[H]
 \centering
-\caption{Comparaison sur 1~h simulée, pannes désactivées.}
+\caption{Comparaison sur 1~h simulée, pannes désactivées (scène Unity).}
 \label{tab:sans_pannes}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
@@ -46,8 +46,9 @@ Produits finis / h & 226 & 422 & 421 & 226 \\
 Rejets & 12 & 24 & 24 & 12 \\
 Cadence moyenne (/min) & 3,77 & 7,03 & 7,02 & 3,77 \\
 Attente au contrôle (s) & 114 & 0 & 0 & 40 \\
-En-cours moyen & 19,2 & 12,1 & 13,0 & 9,5 \\
-Utilisation du goulot & 99,5~\% & 99,8~\% & 99,8~\% & 99,5~\% \\
+En-cours moyen & 19,2 & 12,2 & 13,0 & 9,5 \\
+Séjour moyen (s) & 280 & 97 & 104 & 142 \\
+Utilisation du contrôle & 100~\% & 100~\% & 93~\% & 100~\% \\
 \bottomrule
 \end{tabular}
 \end{table}

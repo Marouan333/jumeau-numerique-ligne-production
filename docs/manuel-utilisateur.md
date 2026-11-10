@@ -5,11 +5,13 @@ ENSAM Rabat · Mini-projet Industrie 4.0 · Prof. Maria Zemzami · 2026/2027
 ## 1. Démarrer
 
 ```bash
-uv venv && uv pip install -r requirements.txt   # ou : python -m venv .venv && pip install -r requirements.txt
-.venv/bin/python backend/server.py
+python -m venv .venv && pip install -r requirements.txt     # Windows : .venv\Scripts\activate
+python backend/server.py
 ```
 
-Ouvrir <http://localhost:8000> dans un navigateur récent (Chrome, Edge, Firefox, Safari). Le badge **Connecté** en haut à gauche confirme la liaison WebSocket avec le backend. S'il affiche **Déconnecté**, le serveur est arrêté ; la page se reconnecte automatiquement dès qu'il redémarre.
+La scène 3D est un build Unity WebGL qui n'est pas versionné. Pour le générer : ouvrir le dossier `unity/` avec Unity 6 (6000.6), puis menu **Twin > Construire WebGL** (le résultat est écrit dans `frontend/unity/`). Voir le `README.md`.
+
+Ouvrir <http://localhost:8000> dans un navigateur récent (Chrome, Edge, Firefox). Le badge **Connecté** en haut à gauche confirme la liaison WebSocket avec le backend. S'il affiche **Déconnecté**, le serveur est arrêté ; la page se reconnecte automatiquement dès qu'il redémarre. Aucune connexion Internet n'est nécessaire.
 
 ## 2. L'écran
 
@@ -63,7 +65,7 @@ Chaque exécution (démarrage, scénario appliqué, remise à zéro) est conserv
 
 | Symptôme | Solution |
 |---|---|
-| Scène 3D vide | Three.js est chargé depuis un CDN : vérifier la connexion Internet |
+| Scène 3D absente (message « Build Unity introuvable ») | Générer le build : dans Unity, menu Twin > Construire WebGL, puis recharger la page |
 | « Déconnecté » | Relancer `backend/server.py`. Le port 8000 est peut-être occupé : `PORT=8010 python backend/server.py` |
 | Historique vide | Les relevés sont pris chaque minute simulée : attendre ou accélérer (×20) |
 | Remettre l'historique à zéro | Arrêter le serveur et supprimer `data/jumeau.db` |

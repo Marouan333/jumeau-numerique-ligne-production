@@ -1,8 +1,8 @@
 % ============================================================================
 % Répartition des tâches, livrables et scénario d'optimisation
-% Version corrigée : 6 membres, Three.js à la place de Unity.
+% Version corrigée : 6 membres, scène 3D réalisée avec Unity (export WebGL).
 % Même charte que le rapport (preamble partagé).
-% Compilation : tectonic repartition-taches.tex
+% Compilation : pdflatex repartition-taches.tex (deux passes)
 % ============================================================================
 \documentclass[11pt,a4paper,openany]{report}
 \input{../rapport/preamble.tex}
@@ -39,7 +39,7 @@
     \textbf{Projet} & Conception et réalisation d'un jumeau numérique d'une ligne de production \\
     \textbf{Encadrante} & Prof. Maria \textsc{Zemzami} \\
     \textbf{Équipe} & 6 membres \\
-    \textbf{Technologies} & Python (simulation, FastAPI), WebSocket, Three.js, SQLite \\
+    \textbf{Technologies} & Python (simulation, FastAPI), WebSocket, Unity (WebGL), SQLite \\
     \bottomrule
   \end{tabular}
   \vfill
@@ -57,7 +57,7 @@
   \item Concevoir l'architecture globale de la ligne de production et du système (simulation, backend, interface).
   \item Définir l'organisation spatiale des équipements.
   \item Modéliser l'environnement industriel en 3D.
-  \item Intégrer les éléments dans la scène Three.js et coordonner la conception 3D (\code{frontend/js/scene.js}).
+  \item Intégrer les éléments dans la scène Unity et coordonner la conception 3D (\code{unity/Assets/Scripts/Scene}, \code{LineLayout}, \code{LineController}).
 \end{itemize}}
 
 \membre{Marouan \textsc{Ezbakhe}}{3D \& Animation}{%
@@ -107,7 +107,7 @@
 \subsection*{A. Produit final}
 \textbf{1. Modèle de simulation du système physique}
 \begin{itemize}[nosep]
-  \item Ligne de production modélisée en 3D (Three.js).
+  \item Ligne de production modélisée en 3D (Unity, export WebGL).
   \item Machines et convoyeurs représentés et animés.
   \item Simulation du déplacement des produits et des étapes de production.
   \item Simulation des différents états des machines (en marche, en attente, bloquée, en panne).
@@ -187,23 +187,23 @@ Le contrôle qualité est le poste le plus lent~: il limite la cadence à 4~prod
   \item \textbf{Convoyeur adaptatif}~: ralentit devant une file chargée, files limitées à 3.
 \end{itemize}
 
-\subsection*{Résultats mesurés (1~h simulée, pannes activées, même graine)}
+\subsection*{Résultats mesurés avec la scène Unity (1~h simulée, pannes activées, graine 7)}
 \begin{table}[H]
 \centering
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Indicateur} & \textbf{Initiale} & \textbf{Contrôle 8~s} & \textbf{2 contrôles} & \textbf{Adaptatif} \\
 \midrule
-Produits finis / h & 218 & \textbf{390} & 389 & 218 \\
-Attente au contrôle & 115~s & \textbf{9~s} & 16~s & 41~s \\
-En-cours moyen & 19,0 & 13,4 & 14,9 & \textbf{9,4} \\
+Produits finis / h & 218 & 393 & \textbf{394} & 218 \\
+Attente au contrôle & 115~s & \textbf{9~s} & 13~s & 40~s \\
+En-cours moyen & 19,0 & 13,6 & 14,7 & \textbf{9,4} \\
 Goulot & Contrôle & Traitement & Traitement & Contrôle \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{warn}
-Les estimations théoriques de départ (240 $\rightarrow$ 450 produits/h) sont remplacées par les mesures du simulateur~: les rejets (5~\%), les transferts et les pannes ramènent le gain réel à +79~\%. Le détail figure au chapitre~5 du rapport.
+Les estimations théoriques de départ (240 $\rightarrow$ 450 produits/h) sont remplacées par les mesures du simulateur~: les rejets (5~\%), les transferts et les pannes ramènent le gain réel à +80~\%. Le détail figure au chapitre~5 du rapport.
 \end{warn}
 
 \begin{figure}[H]

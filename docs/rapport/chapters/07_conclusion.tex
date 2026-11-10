@@ -15,8 +15,8 @@
 \textbf{Livrable} & \textbf{Réalisation} & \textbf{Statut} \\
 \midrule
 Modèle de simulation du système physique & \code{sim.py}~: 4 postes, files, blocages, pannes, rejets, \ac{KPI} & Livré \\
-Interface synchronisée avec des données simulées & Scène 3D et tableau de bord sur un flux \ac{WS} unique à 10~Hz & Livré \\
-Scénario d'optimisation testé et documenté & 3 solutions comparées sur 1~h simulée, chapitre~\ref{chap:optimisation} & Livré \\
+Interface synchronisée avec des données simulées & Scène 3D Unity (WebGL) et tableau de bord sur un flux \ac{WS} unique à 10~Hz & Livré \\
+Scénario d'optimisation testé et documenté & 3 solutions comparées sur 1~h simulée avec la scène Unity, chapitre~\ref{chap:optimisation} & Livré \\
 Historique et statistiques de production & SQLite, onglet Historique, export \ac{CSV} & Livré \\
 Validation du modèle & 23 tests automatisés, contrôle par la loi de Little & Livré \\
 Rapport, présentation, manuel utilisateur & Ce document, support de soutenance, \code{docs/manuel-utilisateur.md} & Livré \\
@@ -24,7 +24,7 @@ Rapport, présentation, manuel utilisateur & Ce document, support de soutenance,
 \end{tabularx}
 \end{table}
 
-Le résultat principal est le suivant~: sur une heure simulée avec pannes, réduire le temps de contrôle de 15 à 8~s, ou doubler le poste de contrôle, fait passer la production de 218 à environ 390 produits finis, soit +79~\%, et déplace le goulot vers le traitement. Le jumeau a aussi corrigé l'estimation théorique de départ (450~produits/h) en tenant compte des rejets, des transferts et des pannes.
+Le résultat principal est le suivant~: sur une heure simulée avec pannes, réduire le temps de contrôle de 15 à 8~s, ou doubler le poste de contrôle, fait passer la production de 218 à environ 393 produits finis, soit +80~\%, et déplace le goulot vers le traitement. Ces valeurs ont été mesurées avec la scène Unity connectée au backend et recoupent la simulation hors ligne à 1{,}3~\% près. Le jumeau a aussi corrigé l'estimation théorique de départ (450~produits/h) en tenant compte des rejets, des transferts et des pannes.
 
 \section{Limites assumées}
 
@@ -32,7 +32,8 @@ Le résultat principal est le suivant~: sur une heure simulée avec pannes, réd
   \item \textbf{Les données sont entièrement simulées.} La ligne \enquote{physique} est elle-même un modèle~; les temps de cycle, \ac{MTBF} et taux de rejet sont des hypothèses pédagogiques. Les conclusions valent pour ce modèle, pas pour une ligne réelle tant que ses paramètres n'ont pas été mesurés.
   \item \textbf{Pas de connexion à des équipements réels.} Il n'y a ni automate, ni capteur, ni protocole industriel~: le jumeau n'est pas encore relié à un système physique au sens strict de Kritzinger et al.~\cite{kritzinger2018}.
   \item \textbf{Pannes au niveau du poste.} Quand un poste a deux machines, une panne les arrête toutes les deux~; la redondance d'un poste doublé n'est donc pas modélisée.
-  \item \textbf{Une seule graine par comparaison.} Les résultats ne sont pas accompagnés d'intervalles de confiance (section~\ref{chap:optimisation}).
+  \item \textbf{Une seule graine par comparaison.} Les résultats ne sont pas accompagnés d'intervalles de confiance (chapitre~\ref{chap:optimisation}).
+  \item \textbf{Fluidité non chiffrée.} Le nombre d'images par seconde du build WebGL dépend du poste~; il doit être relevé sur la machine de démonstration.
   \item \textbf{Sécurité minimale.} L'application est prévue pour un usage local~: pas d'authentification ni de chiffrement.
 \end{itemize}
 
@@ -49,4 +50,4 @@ Le résultat principal est le suivant~: sur une heure simulée avec pannes, réd
 
 \section{Compétences mobilisées}
 
-Ce projet nous a fait traverser toute la chaîne d'un jumeau numérique~: modélisation d'un système de production et de ses phénomènes (goulot, blocage, fiabilité), programmation d'une simulation, communication temps réel entre un serveur et des clients, rendu \ac{3D} dans un navigateur, conception d'indicateurs et d'une interface de supervision, validation par des tests et par des lois connues, et travail en équipe autour d'un protocole commun. Il illustre ce qui distingue un jumeau numérique d'une simple animation~: chaque chiffre affiché peut être relié au modèle, vérifié et reproduit.
+Ce projet nous a fait traverser toute la chaîne d'un jumeau numérique~: modélisation d'un système de production et de ses phénomènes (goulot, blocage, fiabilité), programmation d'une simulation, communication temps réel entre un serveur et des clients, rendu \ac{3D} avec Unity exporté en WebGL, conception d'indicateurs et d'une interface de supervision, validation par des tests et par des lois connues, et travail en équipe autour d'un protocole commun. Il illustre ce qui distingue un jumeau numérique d'une simple animation~: chaque chiffre affiché peut être relié au modèle, vérifié et reproduit.

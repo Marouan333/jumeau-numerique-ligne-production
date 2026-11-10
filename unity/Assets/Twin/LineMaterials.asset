@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f40603c785347d64b8b7f39e38529fd0, type: 3}
+  m_Name: LineMaterials
+  m_EditorClassIdentifier: Assembly-CSharp::Twin.Scene.LineMaterials
+  frame: {fileID: 2100000, guid: 1dc874a8fb3d50845b9112bc1ff47faf, type: 2}
+  body: {fileID: 2100000, guid: 1ff573915dd8db5449e53299ee1e03be, type: 2}
+  accent: {fileID: 2100000, guid: eee374a4ed489ff4b92834447284f01a, type: 2}
+  dark: {fileID: 2100000, guid: 67fbf7d99158a8f47a7493c3f4692118, type: 2}
+  glass: {fileID: 2100000, guid: 376c3b53449f1504da1b42eebbaf5116, type: 2}
+  yellow: {fileID: 2100000, guid: 4f8ab176fe5e9c447a77c9a2f942576c, type: 2}
+  hopper: {fileID: 2100000, guid: a743835cd44bc2446afd929a5c12457c, type: 2}
+  metal: {fileID: 2100000, guid: 2ca17979706d99145a52bad9fc2b7cbc, type: 2}
+  cartonTop: {fileID: 2100000, guid: 684b17007bcb51d41ac917c9d25591b4, type: 2}
+  beam: {fileID: 2100000, guid: 758fb7adffd236c44a28a8d86aed77fc, type: 2}
+  cyan: {fileID: 2100000, guid: 4eaa33afbcd5db34b9f730f941190137, type: 2}
+  lamp: {fileID: 2100000, guid: b8f2dd9287ad9f945bd05d33453b030c, type: 2}
+  progress: {fileID: 2100000, guid: aa079f181ce38f3428b93d2e3b9a4d14, type: 2}
+  productRaw: {fileID: 2100000, guid: 2e004f29377dca2409aa2ae51e074e39, type: 2}
+  productProcessed: {fileID: 2100000, guid: bfae001b33a7465419bc7c275db85b48, type: 2}
+  productChecked: {fileID: 2100000, guid: 8caf5bd6eef025746ae8a8af78ec031d, type: 2}
+  productRejected: {fileID: 2100000, guid: c325502b06d557d42a985f178b61f87e, type: 2}
+  carton: {fileID: 2100000, guid: e6654a7e73d8841409f3483d0063f672, type: 2}
+  belt: {fileID: 2100000, guid: 9bde3e33651713144824b55724608835, type: 2}
+  wood: {fileID: 2100000, guid: 0961eaa543fed304999ec07f10dcfbf9, type: 2}
+  woodDark: {fileID: 2100000, guid: 0cf3965a80b41344397b5f3eea2952ee, type: 2}
+  bin: {fileID: 2100000, guid: 6e5700d5b82175e4e9c1c2086aae97cd, type: 2}
+  label: {fileID: 2100000, guid: 8ce9ca23d7d13eb4d898fe1b829ec889, type: 2}
+  labelRed: {fileID: 2100000, guid: f1a0f2619fad1e241b2eeef1419f5aa7, type: 2}
+  hopperMesh: {fileID: 4300000, guid: 39b8942f93504ef48b96fc255ca19bbd, type: 2}
+  cubeMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  cylinderMesh: {fileID: 10203, guid: 0000000000000000e000000000000000, type: 0}
+  sphereMesh: {fileID: 10200, guid: 0000000000000000e000000000000000, type: 0}
+  quadMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}

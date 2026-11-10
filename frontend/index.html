@@ -6,15 +6,12 @@
   <title>Jumeau numérique – ENSAM Rabat</title>
   <link rel="icon" href="assets/logo_ensam.png">
   <link rel="stylesheet" href="style.css">
-  <script type="importmap">
-    { "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-    } }
-  </script>
 </head>
 <body>
   <main id="viewport">
+    <!-- Scène 3D : build Unity WebGL (voir README, menu Twin > Construire WebGL) -->
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    <div id="unity-loading" class="unity-loading">Chargement de la scène 3D…</div>
     <header class="topbar">
       <div class="brand">
         <img src="assets/logo_ensam.png" alt="ENSAM Rabat" class="logo">
@@ -205,8 +202,8 @@
     <table>
       <thead><tr><th>Membre</th><th>Responsabilité</th><th>Dans le code</th></tr></thead>
       <tbody>
-        <tr><td>Aymane ISSAMI</td><td>3D &amp; Architecture</td><td><code>frontend/js/scene.js</code></td></tr>
-        <tr><td>Marouan EZBAKHE</td><td>3D &amp; Animation</td><td><code>frontend/js/scene.js</code></td></tr>
+        <tr><td>Aymane ISSAMI</td><td>3D &amp; Architecture</td><td><code>unity/Assets/Scripts/Scene/</code></td></tr>
+        <tr><td>Marouan EZBAKHE</td><td>3D &amp; Animation</td><td><code>unity/Assets/Scripts/Scene/</code></td></tr>
         <tr><td>Hiba BENZAHRA</td><td>Simulation industrielle</td><td><code>backend/sim.py</code></td></tr>
         <tr><td>Zaid HSAIN</td><td>Backend &amp; Communication</td><td><code>backend/server.py</code>, <code>storage.py</code></td></tr>
         <tr><td>Houssam KICHCHOU</td><td>Dashboard &amp; KPI</td><td><code>frontend/js/app.js</code></td></tr>

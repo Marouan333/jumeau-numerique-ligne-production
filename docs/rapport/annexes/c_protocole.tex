@@ -1,13 +1,13 @@
 \chapter{Protocole d'échange}
 \label{ann:protocole}
 
-\section{Commandes WebSocket (navigateur $\rightarrow$ backend)}
+\section{Commandes WebSocket (navigateur \texorpdfstring{$\rightarrow$}{vers} backend)}
 
 \begin{table}[H]
 \centering
 \caption{Commandes acceptées sur \code{/ws}.}
 \label{tab:commandes}
-\small
+\footnotesize
 \begin{tabularx}{\textwidth}{@{}l X@{}}
 \toprule
 \textbf{Action} & \textbf{Message} \\
@@ -24,7 +24,7 @@ Comparer les scénarios & \code{\{"cmd":"compare","duration":3600\}} $\rightarro
 \end{tabularx}
 \end{table}
 
-\section{Messages backend $\rightarrow$ navigateur}
+\section{Messages backend \texorpdfstring{$\rightarrow$}{vers} clients (page web et scène Unity)}
 
 \begin{itemize}
   \item \code{hello} (à la connexion)~: liste des postes et des scénarios disponibles.

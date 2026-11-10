@@ -17,7 +17,7 @@ Le système est découpé en trois couches, représentées en figure~\ref{fig:ar
   arr/.style={-{Stealth[length=2.5mm]}, thick, ensambleu},
   lbl/.style={font=\scriptsize, fill=white, inner sep=1.5pt}
 ]
-\node[box] (scene) {\textbf{scene.js}\\ scène 3D Three.js};
+\node[box] (scene) {\textbf{Unity WebGL}\\ scène 3D (C\#)};
 \node[box, below=0.7cm of scene] (app) {\textbf{app.js}\\ tableau de bord, commandes};
 \node[grp, fit=(scene)(app), label={[font=\small\bfseries]above:Navigateur (interface)}] (nav) {};
 
@@ -31,13 +31,13 @@ Le système est découpé en trois couches, représentées en figure~\ref{fig:ar
 \draw[arr, dashed] (app.east) -- node[lbl, below=2pt]{REST : historique, CSV} (app.east -| back.west);
 \draw[arr] (server) -- node[lbl, right]{pas de 0,05 s} (sim);
 \draw[arr] (sim) -- node[lbl, right]{1 relevé / min simulée} (storage);
-\draw[arr] (app) -- node[lbl, left]{même message} (scene);
+\draw[arr] (app) -- node[lbl, left]{pont LineBridge} (scene);
 \end{tikzpicture}
 \caption{Architecture du jumeau numérique.}
 \label{fig:architecture}
 \end{figure}
 
-Le choix structurant est que \textbf{la scène \ac{3D} et le tableau de bord lisent le même message}. Le backend n'envoie pas une information à la \ac{3D} et une autre au tableau de bord~: il envoie un état unique de la ligne (machines, files, produits, \ac{KPI}), et chaque vue en extrait ce qu'elle affiche. Il est donc impossible que la \ac{3D} montre une machine en panne pendant que le tableau de bord la déclare en marche.
+Le choix structurant est que \textbf{la scène \ac{3D} et le tableau de bord reçoivent le même état}. Le backend n'envoie pas une information à la \ac{3D} et une autre au tableau de bord~: il diffuse un état unique de la ligne (machines, files, produits, \ac{KPI}) sur le même canal \ac{WS}, et chaque vue en extrait ce qu'elle affiche. La scène Unity se connecte à \code{/ws} de la même origine que la page (en développement dans l'éditeur, à \code{ws://127.0.0.1:8000/ws}). Il est donc impossible que la \ac{3D} montre une machine en panne pendant que le tableau de bord la déclare en marche.
 
 \section{Modèle de simulation de la ligne}
 
@@ -141,7 +141,7 @@ Le backend expose un point d'accès \ac{WS} \code{/ws}. Toutes les 100~ms, il en
   "exits":    [[11, "ok"]] }
 \end{lstlisting}
 
-Chaque produit est décrit par sa position logique (poste, \code{q}~en file, \code{p}~en traitement, \code{t}~sur le convoyeur, et sa progression)~: c'est le navigateur qui la traduit en coordonnées \ac{3D}. Le backend reste ainsi indépendant de la représentation graphique. Dans l'autre sens, l'interface envoie des commandes courtes (\code{\{"cmd": "set\_time", "station": 2, "value": 8\}}). L'historique, qui n'a pas besoin du temps réel, est servi par trois points d'accès \ac{REST}~: \code{/api/runs}, \code{/api/history} et \code{/api/export.csv}. Le protocole complet figure en annexe~\ref{ann:protocole}.
+Chaque produit est décrit par sa position logique (poste, \code{q}~en file, \code{p}~en traitement, \code{t}~sur le convoyeur, et sa progression)~: c'est la scène Unity qui la traduit en coordonnées \ac{3D}. Le backend reste ainsi indépendant de la représentation graphique. Dans l'autre sens, l'interface envoie des commandes courtes (\code{\{"cmd": "set\_time", "station": 2, "value": 8\}}). L'historique, qui n'a pas besoin du temps réel, est servi par trois points d'accès \ac{REST}~: \code{/api/runs}, \code{/api/history} et \code{/api/export.csv}. Le protocole complet figure en annexe~\ref{ann:protocole}.
 
 \section{Répartition des rôles}
 
@@ -153,12 +153,12 @@ Chaque produit est décrit par sa position logique (poste, \code{q}~en file, \co
 \toprule
 \textbf{Membre} & \textbf{Responsabilité} & \textbf{Livrable dans le dépôt} \\
 \midrule
-Aymane \textsc{Issami} & 3D \& Architecture & Architecture globale, scène et implantation spatiale (\code{scene.js}) \\
-Marouan \textsc{Ezbakhe} & 3D \& Animation & Modèles des machines, animations, états visuels (\code{scene.js}) \\
+Aymane \textsc{Issami} & 3D \& Architecture & Architecture globale, scène et implantation spatiale (\code{LineLayout}, \code{LineController}) \\
+Marouan \textsc{Ezbakhe} & 3D \& Animation & Modèles des machines, animations, états visuels (\code{LineBuilder}, \code{StationUnit}) \\
 Hiba \textsc{Benzahra} & Simulation industrielle & Logique de la ligne, cycles, pannes, données (\code{sim.py}) \\
 Zaid \textsc{Hsain} & Backend \& Communication & Serveur \ac{WS}/\ac{REST}, synchronisation, stockage (\code{server.py}, \code{storage.py}) \\
 Houssam \textsc{Kichchou} & Dashboard \& KPI & Supervision, \ac{KPI}, historique et statistiques (\code{app.js}) \\
-Mohamed \textsc{Hamdouch} & Optimisation \& Validation & Scénarios, comparaison avant/après, tests (\code{compare\_presets}, \code{tests/}) \\
+Mohamed \textsc{Hamdouch} & Optimisation \& Validation & Scénarios, comparaison avant/après, tests (\code{compare\_presets}, \code{ScenarioBenchmark}, \code{tests/}) \\
 \bottomrule
 \end{tabularx}
 \end{table}
